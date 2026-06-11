@@ -913,10 +913,53 @@ body.serial-initializing textarea {
 }
 
 body.northmesh-guided .mode-gate,
+body.northmesh-guided .mode-tabs,
 body.northmesh-guided .sidebar .panel:first-child,
 body.northmesh-guided .sidebar .panel:nth-child(3),
 body.northmesh-guided .settings-actions__note,
-body.northmesh-guided #download-backup-button {
+body.northmesh-guided .settings-actions,
+body.northmesh-guided #download-backup-button,
+body.northmesh-guided .advanced-only,
+body.northmesh-guided .mqtt-control-strip,
+body.northmesh-guided .mqtt-status-section,
+body.northmesh-guided [id^="mqtt-logical-broker-"],
+body.northmesh-guided [id^="mqtt-status-toggle-row-"] {
+  display: none !important;
+}
+
+.wizard-nav {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin: -4px 0 22px;
+  padding: 14px;
+  border: 1px solid rgba(94, 132, 171, 0.22);
+  border-radius: 12px;
+  background: rgba(7, 17, 29, 0.76);
+}
+
+.wizard-nav__status {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  min-width: 0;
+}
+
+.wizard-nav__status span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.wizard-nav__status strong {
+  color: var(--text);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.wizard-nav[hidden] {
   display: none !important;
 }
 
@@ -1213,6 +1256,15 @@ body.mode-simple .mqtt-broker-card--pair .panel__eyebrow {
 @media (max-width: 640px) {
   .app-shell {
     padding: 16px;
+  }
+
+  .wizard-nav {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .wizard-nav__status {
+    grid-column: 1 / -1;
+    grid-row: 1;
   }
 
   .notice-bar {

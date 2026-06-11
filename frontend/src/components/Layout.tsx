@@ -10,7 +10,7 @@ export default function Layout() {
     { path: '/', label: 'Home' },
     { path: '/map', label: 'Live Map' },
     { path: '/network', label: 'Network' },
-    { path: '/flasher', label: 'Flasher' },
+    { path: '/mqtt-flasher/index.html?v=20260611-guided', label: 'Flasher', external: true },
   ]
 
   return (
@@ -36,13 +36,23 @@ export default function Layout() {
 
           <div className={styles.navLinks}>
             {navLinks.map(link => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`${styles.navLink} ${location.pathname === link.path ? styles.active : ''}`}
-              >
-                {link.label}
-              </Link>
+              link.external ? (
+                <a
+                  key={link.path}
+                  href={link.path}
+                  className={`${styles.navLink} ${location.pathname.startsWith('/mqtt-flasher') ? styles.active : ''}`}
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`${styles.navLink} ${location.pathname === link.path ? styles.active : ''}`}
+                >
+                  {link.label}
+                </Link>
+              )
             ))}
           </div>
 

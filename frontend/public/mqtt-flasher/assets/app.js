@@ -13,6 +13,11 @@ const modeGate = document.getElementById("mode-gate");
 const workflowPanels = document.getElementById("workflow-panels");
 const advancedTabs = document.getElementById("advanced-tabs");
 const advancedTabButtons = Array.from(document.querySelectorAll(".mode-tabs__button"));
+const wizardNav = document.getElementById("wizard-nav");
+const wizardBackButton = document.getElementById("wizard-back-button");
+const wizardNextButton = document.getElementById("wizard-next-button");
+const wizardStepCount = document.getElementById("wizard-step-count");
+const wizardStepTitle = document.getElementById("wizard-step-title");
 const modeSimpleButton = document.getElementById("mode-simple-button");
 const modeAdvancedButton = document.getElementById("mode-advanced-button");
 const sidebarModeSimpleButton = document.getElementById("sidebar-mode-simple");
@@ -136,6 +141,14 @@ const STEP_ORDER = [
   "mqtt-settings",
   "configure-device"
 ];
+const STEP_TITLES = {
+  "read-device": "Read existing settings?",
+  "choose-board": "Which board are you flashing?",
+  "flash-firmware": "Which radio profile should it use?",
+  "device-settings": "What WiFi should it use?",
+  "mqtt-settings": "What are the MQTT credentials?",
+  "configure-device": "Ready to apply settings?"
+};
 let activeStepId = "read-device";
 let uiMode = null;
 
@@ -249,6 +262,11 @@ const SENSITIVE_COMMAND_PREFIXES = [
 
 const MQTT_MAX_BROKERS = 6;
 const LOGICAL_MQTT_BROKER_MAX = 3;
+const NORTHMESH_MQTT_DEFAULTS = {
+  uri: "wss://mqtt.northmesh.co.uk:443/",
+  iata: "uk",
+  retainStatus: "0"
+};
 
 function humanFlashPackage(board) {
   if (!board) return "Unavailable";
@@ -459,6 +477,17 @@ function normalizeBrokerRecord(index, broker = {}) {
 
 function readRawBrokerSettings(formData, index, { respectMode = true } = {}) {
   const effectiveMode = respectMode ? uiMode : UI_MODES.ADVANCED;
+  if (document.body.classList.contains("northmesh-guided") && index === 1) {
+    return normalizeBrokerRecord(index, {
+      enabled: true,
+      uri: NORTHMESH_MQTT_DEFAULTS.uri,
+      username: formData.get("mqttUsername"),
+      password: formData.get("mqttPassword"),
+      topicRoot: buildDefaultPacketsTopic(NORTHMESH_MQTT_DEFAULTS.iata),
+      iata: NORTHMESH_MQTT_DEFAULTS.iata,
+      retainStatus: NORTHMESH_MQTT_DEFAULTS.retainStatus
+    });
+  }
   if (effectiveMode === UI_MODES.SIMPLE && index > 1) {
     return normalizeBrokerRecord(index, {
       enabled: false,
@@ -794,6 +823,35 @@ function getStepIndex(stepId) {
   return index >= 0 ? index : 0;
 }
 
+function updateWizardNav() {
+  if (!wizardNav) return;
+  const hasActiveStep = Boolean(uiMode && activeStepId);
+  wizardNav.hidden = !hasActiveStep;
+  if (!hasActiveStep) return;
+
+  const stepIndex = getStepIndex(activeStepId);
+  if (wizardStepCount) {
+    wizardStepCount.textContent = `Step ${stepIndex + 1} of ${STEP_ORDER.length}`;
+  }
+  if (wizardStepTitle) {
+    wizardStepTitle.textContent = STEP_TITLES[activeStepId] || "";
+  }
+  if (wizardBackButton) {
+    wizardBackButton.disabled = stepIndex === 0;
+  }
+  if (wizardNextButton) {
+    const isFinalStep = stepIndex === STEP_ORDER.length - 1;
+    wizardNextButton.textContent = isFinalStep ? "Apply Settings" : "Next";
+  }
+}
+
+function goToAdjacentStep(direction) {
+  if (!activeStepId) return;
+  const currentIndex = getStepIndex(activeStepId);
+  const nextIndex = Math.max(0, Math.min(STEP_ORDER.length - 1, currentIndex + direction));
+  setActiveStep(STEP_ORDER[nextIndex]);
+}
+
 function setActiveStep(stepId) {
   if (uiMode && stepId === null) return;
   if (stepId !== null && !STEP_ORDER.includes(stepId)) return;
@@ -809,6 +867,7 @@ function setActiveStep(stepId) {
   });
   updateAdvancedTabs();
   updateNavActionButton();
+  updateWizardNav();
 }
 
 function recommendedStepId() {
@@ -3106,6 +3165,19 @@ navActionButton?.addEventListener("click", async () => {
       await applySettings("mqtt");
     }
   }
+});
+
+wizardBackButton?.addEventListener("click", () => {
+  goToAdjacentStep(-1);
+});
+
+wizardNextButton?.addEventListener("click", async () => {
+  if (activeStepId === "configure-device") {
+    await applySettings("all");
+    return;
+  }
+
+  goToAdjacentStep(1);
 });
 
 function markApplyStages(mode) {

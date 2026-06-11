@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MeshCore MQTT Web Flasher</title>
-    <link rel="stylesheet" href="assets/styles.css?v=20260611-serial-lock">
+    <link rel="stylesheet" href="assets/styles.css?v=20260611-guided">
   </head>
   <body class="northmesh-guided">
     <div class="app-shell">
@@ -52,6 +52,15 @@
         <button class="mode-tabs__button" data-step-target="mqtt-settings" aria-controls="mqtt-settings" role="tab" type="button">MQTT</button>
         <button class="mode-tabs__button" data-step-target="configure-device" aria-controls="configure-device" role="tab" type="button">Progress</button>
       </nav>
+
+      <section class="wizard-nav" id="wizard-nav" aria-label="Flasher step controls">
+        <button class="button button--ghost" id="wizard-back-button" type="button">Back</button>
+        <div class="wizard-nav__status">
+          <span id="wizard-step-count">Step 1 of 6</span>
+          <strong id="wizard-step-title">Read existing settings?</strong>
+        </div>
+        <button class="button button--primary" id="wizard-next-button" type="button">Next</button>
+      </section>
 
       <main class="workspace">
         <section class="workflow">
@@ -867,6 +876,6 @@
     </div>
 
     <script src="assets/firmware-data.js?v=20260314-2300"></script>
-    <script src="assets/app.js?v=20260611-serial-lock"></script>
+    <script src="assets/app.js?v=20260611-guided"></script>
   </body>
 </html>

@@ -1430,6 +1430,29 @@ function setUserInputLocked(locked) {
   updateSerialButton();
 }
 
+function blockUserInputDuringSerialInit(event) {
+  if (!serialInitializing || !event.isTrusted) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+}
+
+[
+  "click",
+  "change",
+  "input",
+  "keydown",
+  "keyup",
+  "mousedown",
+  "mouseup",
+  "pointerdown",
+  "pointerup",
+  "submit",
+  "touchstart",
+  "touchend"
+].forEach((eventName) => {
+  document.addEventListener(eventName, blockUserInputDuringSerialInit, true);
+});
+
 function updateNavActionButton() {
   if (!navActionButton) return;
 

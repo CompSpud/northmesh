@@ -1,7 +1,7 @@
 import { ExternalLink, Server, Usb } from 'lucide-react'
 import styles from './FlasherPage.module.css'
 
-const FLASHER_PATH = '/mqtt-flasher/index.html'
+const FLASHER_PATH = '/mqtt-flasher/index.html?v=20260611-serial-lock'
 
 export default function FlasherPage() {
   return (

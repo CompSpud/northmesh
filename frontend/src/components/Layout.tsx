@@ -10,6 +10,7 @@ export default function Layout() {
     { path: '/', label: 'Home' },
     { path: '/map', label: 'Live Map' },
     { path: '/network', label: 'Network' },
+    { path: '/flasher', label: 'Flasher' },
   ]
 
   return (

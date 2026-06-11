@@ -3,6 +3,7 @@ import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import MapPage from './pages/MapPage'
 import NetworkPage from './pages/NetworkPage'
+import FlasherPage from './pages/FlasherPage'
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path="map" element={<MapPage />} />
         <Route path="network" element={<NetworkPage />} />
+        <Route path="flasher" element={<FlasherPage />} />
       </Route>
     </Routes>
   )

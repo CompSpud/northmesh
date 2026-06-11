@@ -16,23 +16,18 @@ const FLASHER_URL = 'https://meshcore.io/flasher'
 const FIRMWARE_URL = 'https://github.com/meshcore-dev/MeshCore/releases'
 
 const BOARDS: Board[] = [
+  { name: 'Heltec V3', family: 'Heltec', chipset: 'ESP32 / SX1262', flash: 'USB' },
   { name: 'Heltec V4', family: 'Heltec', chipset: 'ESP32-S3 / SX1262', flash: 'USB' },
   { name: 'Heltec T114', family: 'Heltec', chipset: 'nRF52840 / SX1262', flash: 'UF2' },
   { name: 'Heltec T190', family: 'Heltec', chipset: 'nRF52840 / SX1262', flash: 'UF2' },
-  { name: 'Heltec Mesh Pocket', family: 'Heltec', chipset: 'nRF52840 / SX1262', flash: 'UF2' },
   { name: 'Heltec Mesh Solar', family: 'Heltec', chipset: 'nRF52840 / SX1262', flash: 'UF2' },
   { name: 'LilyGO T-Beam 1W', family: 'LilyGO', chipset: 'ESP32 / SX1262', flash: 'USB' },
   { name: 'LilyGO T-Beam Supreme', family: 'LilyGO', chipset: 'ESP32-S3 / SX1262', flash: 'USB' },
-  { name: 'LilyGO T-Deck', family: 'LilyGO', chipset: 'ESP32-S3 / SX1262', flash: 'USB' },
-  { name: 'LilyGO T-Echo', family: 'LilyGO', chipset: 'nRF52840 / SX1262', flash: 'UF2' },
   { name: 'LilyGO T3S3', family: 'LilyGO', chipset: 'ESP32-S3 / SX1262', flash: 'USB' },
   { name: 'RAK4631', family: 'RAKwireless', chipset: 'nRF52840 / SX1262', flash: 'UF2' },
   { name: 'RAK3401', family: 'RAKwireless', chipset: 'nRF52840 / SX1262', flash: 'UF2' },
   { name: 'Station G2', family: 'Station', chipset: 'nRF52840 / SX1262', flash: 'UF2' },
   { name: 'Station G3 ESP32', family: 'Station', chipset: 'ESP32-S3 / SX1262', flash: 'USB' },
-  { name: 'Seeed Wio Tracker L1', family: 'Seeed', chipset: 'STM32WLE5', flash: 'USB' },
-  { name: 'Seeed SenseCAP Solar', family: 'Seeed', chipset: 'nRF52840 / SX1262', flash: 'UF2' },
-  { name: 'Tracker T1000-E', family: 'Seeed', chipset: 'nRF52840 / LR1110', flash: 'UF2' },
   { name: 'Nano G2 Ultra', family: 'Nano', chipset: 'nRF52840 / SX1262', flash: 'UF2' },
   { name: 'ThinkNode M1', family: 'ThinkNode', chipset: 'nRF52840 / SX1262', flash: 'UF2' },
   { name: 'ThinkNode M3', family: 'ThinkNode', chipset: 'nRF52840 / SX1262', flash: 'UF2' },
@@ -81,7 +76,7 @@ export default function FlasherPage() {
           <p className={styles.kicker}>MeshCore onboarding</p>
           <h1 className={styles.title}>LoRa Board Flasher</h1>
           <p className={styles.subtitle}>
-            Pick a common MeshCore board, flash the correct firmware, then point it at the NorthMesh MQTT broker.
+            Pick a common MeshCore repeater board, flash repeater firmware, then point it at the NorthMesh MQTT broker.
           </p>
         </div>
         <div className={styles.headerActions}>
@@ -171,7 +166,7 @@ export default function FlasherPage() {
           </div>
 
           <ol className={styles.steps}>
-            <li>Open the MeshCore flasher and choose the firmware matching this board.</li>
+            <li>Open the MeshCore flasher and choose the repeater firmware matching this board.</li>
             <li>Connect the board by USB, enter bootloader mode if needed, then flash.</li>
             <li>Set MQTT to the NorthMesh broker details above and use issued credentials.</li>
             <li>Restart the device and check the Network page for the MQTT Connected tag.</li>

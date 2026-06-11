@@ -105,6 +105,7 @@ let currentFirmwareBranch = "main";
 const FIRMWARE_BRANCH_STORAGE_KEY = "meshcore-mqtt-firmware-branch";
 const DEV_WARNING_SHOWN_KEY = "meshcore-mqtt-dev-warning-shown";
 let serialConnected = false;
+let serialInitializing = false;
 let configApplied = false;
 let currentBoard = null;
 let boardSelectionConfirmed = false;
@@ -121,6 +122,7 @@ let serialConnectedAt = 0;
 let serialCliReady = false;
 let preferredSerialPortInfo = null;
 let scheduledSerialDisconnect = null;
+const inputLockSnapshot = new Map();
 let capturedDeviceInfo = null;
 let savedStep4Settings = null;
 let activeMqttBrokerIds = new Set();
@@ -1397,9 +1399,35 @@ function evaluateCapabilities() {
 }
 
 function updateSerialButton() {
-  const text = serialConnected ? "Connected" : "Connect Serial";
+  const text = serialInitializing ? "Initializing..." : serialConnected ? "Connected" : "Connect Serial";
   if (serialButton) serialButton.textContent = text;
   if (navSerialButton) navSerialButton.textContent = text;
+}
+
+function setUserInputLocked(locked) {
+  document.body.classList.toggle("serial-initializing", locked);
+  document.body.setAttribute("aria-busy", locked ? "true" : "false");
+
+  const controls = Array.from(document.querySelectorAll("button, input, select, textarea"));
+  controls.forEach((control) => {
+    if (locked) {
+      if (!inputLockSnapshot.has(control)) {
+        inputLockSnapshot.set(control, control.disabled);
+      }
+      control.disabled = true;
+      return;
+    }
+
+    if (inputLockSnapshot.has(control)) {
+      control.disabled = inputLockSnapshot.get(control);
+    }
+  });
+
+  if (!locked) {
+    inputLockSnapshot.clear();
+  }
+
+  updateSerialButton();
 }
 
 function updateNavActionButton() {
@@ -1941,30 +1969,46 @@ async function connectSerial() {
     throw new Error("Web Serial API is not available in this browser");
   }
 
+  if (serialInitializing) return;
+
+  serialInitializing = true;
+  setUserInputLocked(true);
+  setPanelState(serialState, "Serial initializing", "panel__status--busy");
+
   if (serialConnected) {
-    await disconnectSerialSession();
-    return;
+    try {
+      await disconnectSerialSession();
+      return;
+    } finally {
+      serialInitializing = false;
+      setUserInputLocked(false);
+    }
   }
 
-  serialPort = await requestPreferredPort();
-  await serialPort.open({ baudRate: 115200 });
-  cancelScheduledSerialDisconnect();
-  serialConnectedAt = Date.now();
-  serialConnected = true;
-  serialCliReady = false;
-  serialReadBuffer = "";
-  serialTextDecoder = new TextDecoder();
-  readSerialLoop();
-  appendLog("Serial link opened at 115200 baud.");
-  appendLog("Waiting for device console to settle.");
-  await delay(1200);
-  updateSerialButton();
-  setPanelState(serialState, "Serial connected", "panel__status--connected");
-  setText(stateSerial, "Connected");
-  setText(summarySerial, "Connected at 115200");
-  setCommandState(0, "is-done", "Connected");
-  appendLog("Serial console is ready.");
-  // Don't auto-switch tabs - let user navigate manually
+  try {
+    serialPort = await requestPreferredPort();
+    await serialPort.open({ baudRate: 115200 });
+    cancelScheduledSerialDisconnect();
+    serialConnectedAt = Date.now();
+    serialConnected = true;
+    serialCliReady = false;
+    serialReadBuffer = "";
+    serialTextDecoder = new TextDecoder();
+    readSerialLoop();
+    appendLog("Serial link opened at 115200 baud.");
+    appendLog("Waiting for device console to initialize.");
+    await delay(1200);
+    await ensureSerialCliReady();
+    setPanelState(serialState, "Serial connected", "panel__status--connected");
+    setText(stateSerial, "Connected");
+    setText(summarySerial, "Connected at 115200");
+    setCommandState(0, "is-done", "Connected");
+    appendLog("Serial console is ready.");
+    // Don't auto-switch tabs - let user navigate manually
+  } finally {
+    serialInitializing = false;
+    setUserInputLocked(false);
+  }
 }
 
 function buildCommandPreview() {

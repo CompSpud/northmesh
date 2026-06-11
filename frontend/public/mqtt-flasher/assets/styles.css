@@ -897,6 +897,21 @@ button:focus,
   display: none !important;
 }
 
+body.serial-initializing {
+  cursor: wait;
+}
+
+body.serial-initializing .app-shell {
+  opacity: 0.82;
+}
+
+body.serial-initializing button,
+body.serial-initializing input,
+body.serial-initializing select,
+body.serial-initializing textarea {
+  cursor: wait;
+}
+
 body.northmesh-guided .mode-gate,
 body.northmesh-guided .sidebar .panel:first-child,
 body.northmesh-guided .sidebar .panel:nth-child(3),

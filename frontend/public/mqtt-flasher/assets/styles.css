@@ -893,6 +893,50 @@ button:focus,
   display: none !important;
 }
 
+.northmesh-hidden-setting {
+  display: none !important;
+}
+
+body.northmesh-guided .mode-gate,
+body.northmesh-guided .sidebar .panel:first-child,
+body.northmesh-guided .sidebar .panel:nth-child(3),
+body.northmesh-guided .settings-actions__note,
+body.northmesh-guided #download-backup-button {
+  display: none !important;
+}
+
+body.northmesh-guided .workflow {
+  gap: 18px;
+}
+
+body.northmesh-guided .workspace {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+body.northmesh-guided .panel__header h2 {
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+}
+
+body.northmesh-guided .settings-section-card {
+  padding: 18px;
+}
+
+body.northmesh-guided .settings-section-card__header {
+  margin-bottom: 14px;
+}
+
+body.northmesh-guided .settings-grid {
+  grid-template-columns: 1fr;
+}
+
+body.northmesh-guided .mqtt-broker-card--pair {
+  padding: 18px;
+}
+
+body.northmesh-guided .mqtt-topic-preview {
+  margin-top: 10px;
+}
+
 body.mode-simple .advanced-only,
 body.mode-advanced .simple-only {
   display: none !important;

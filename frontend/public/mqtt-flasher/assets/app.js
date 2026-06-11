@@ -1254,8 +1254,8 @@ async function loadFirmwareDataForBranch(branch) {
     // Determine the firmware data URL based on branch
     const isMain = branch === "main";
     const firmwareDataUrl = isMain
-      ? "/assets/firmware-data.js"
-      : `/assets/firmware-data-${branch}.js`;
+      ? "/mqtt-flasher/assets/firmware-data.js"
+      : `/mqtt-flasher/assets/firmware-data-${branch}.js`;
 
     // Fetch the firmware data script
     const response = await fetch(firmwareDataUrl);
@@ -3202,16 +3202,14 @@ clearLogButton.addEventListener("click", () => {
 populateBoards();
 evaluateCapabilities();
 applyRadioPreset("EU_UK_RECOMMENDED");
-setUiMode(UI_MODES.ADVANCED);
+setUiMode(UI_MODES.SIMPLE, { persist: false });
 
 // Initialize firmware branch from storage
 (function initFirmwareBranch() {
+  firmwareBranchSelect.value = "main";
+  currentFirmwareBranch = "main";
   try {
-    const savedBranch = window.localStorage.getItem(FIRMWARE_BRANCH_STORAGE_KEY);
-    if (savedBranch && (savedBranch === "main" || savedBranch === "dev")) {
-      firmwareBranchSelect.value = savedBranch;
-      currentFirmwareBranch = savedBranch;
-    }
+    window.localStorage.setItem(FIRMWARE_BRANCH_STORAGE_KEY, "main");
   } catch (e) {
     // ignore storage errors
   }

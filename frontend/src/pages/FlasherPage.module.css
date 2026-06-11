@@ -1,15 +1,16 @@
 .page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 24px;
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  padding: 32px 24px;
 }
 
 .header {
+  max-width: 1400px;
+  margin: 0 auto 18px;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 24px;
 }
 
 .kicker {
@@ -32,19 +33,11 @@
 }
 
 .subtitle {
-  max-width: 680px;
+  max-width: 760px;
   color: var(--text-muted);
 }
 
-.headerActions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.primaryButton,
-.secondaryButton,
-.copyButton {
+.openButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -52,280 +45,93 @@
   min-height: 40px;
   padding: 10px 14px;
   border-radius: var(--radius-md);
+  background: var(--accent-aurora);
+  color: var(--bg-void);
   font-size: 0.875rem;
   font-weight: 700;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.primaryButton {
-  background: var(--accent-aurora);
-  color: var(--bg-void);
-}
-
-.primaryButton:hover {
+.openButton:hover {
   color: var(--bg-void);
   transform: translateY(-1px);
   box-shadow: var(--shadow-glow);
 }
 
-.secondaryButton,
-.copyButton {
-  border: 1px solid var(--border-light);
+.brokerBar {
+  max-width: 1400px;
+  margin: 0 auto 18px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.brokerItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 12px;
   background: var(--bg-panel);
-  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
 }
 
-.secondaryButton:hover,
-.copyButton:hover {
-  border-color: var(--accent-cyan);
-  color: var(--text-primary);
+.brokerItem svg {
+  color: var(--accent-cyan);
 }
 
-.mqttPanel,
-.boardPanel,
-.detailPanel {
+.brokerItem code {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.frameShell {
+  max-width: 1400px;
+  height: calc(100vh - 230px);
+  min-height: 680px;
+  margin: 0 auto;
+  overflow: hidden;
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
 }
 
-.mqttPanel {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 24px;
-  padding: 20px;
-  margin-bottom: 24px;
-}
-
-.panelTitle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--accent-cyan);
-}
-
-.panelTitle h2 {
-  font-size: 1rem;
-}
-
-.mqttGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.mqttGrid > div {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.label {
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-code,
-.configPreview {
-  font-family: var(--font-mono);
-}
-
-.mqttGrid code {
-  overflow-wrap: anywhere;
-  color: var(--text-primary);
-  font-size: 0.875rem;
-}
-
-.contentGrid {
-  display: grid;
-  grid-template-columns: minmax(280px, 380px) 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-.boardPanel,
-.detailPanel {
-  padding: 20px;
-}
-
-.searchBox {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  padding: 10px 12px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text-muted);
-}
-
-.searchBox input {
+.flasherFrame {
   width: 100%;
-  min-width: 0;
+  height: 100%;
   border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--text-primary);
+  background: #07111f;
 }
 
-.searchBox input::placeholder {
-  color: var(--text-dim);
-}
-
-.boardList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 620px;
-  overflow: auto;
-  padding-right: 4px;
-}
-
-.boardItem {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  width: 100%;
-  min-height: 58px;
-  padding: 10px 12px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-  text-align: left;
-}
-
-.boardItem:hover,
-.boardItem.selected {
-  border-color: var(--accent-aurora);
-  background: rgba(0, 229, 204, 0.08);
-}
-
-.boardName {
-  font-weight: 700;
-}
-
-.boardMeta {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
-
-.boardHeader {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 20px;
-}
-
-.boardHeader svg {
-  color: var(--accent-aurora);
-}
-
-.boardHeader h2 {
-  font-size: 1.5rem;
-}
-
-.boardHeader p {
-  color: var(--text-muted);
-}
-
-.specGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.specGrid > div {
-  display: grid;
-  gap: 6px;
-  min-height: 116px;
-  padding: 16px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-.specGrid svg {
-  color: var(--accent-cyan);
-}
-
-.specGrid span {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.specGrid strong {
-  font-size: 1rem;
-}
-
-.steps {
-  display: grid;
-  gap: 10px;
-  margin: 0 0 24px 20px;
-  color: var(--text-muted);
-}
-
-.steps li::marker {
-  color: var(--accent-aurora);
-  font-weight: 700;
-}
-
-.configPreview {
-  overflow: auto;
-  padding: 16px;
-  background: #05070d;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-size: 0.8125rem;
-  line-height: 1.7;
-  white-space: pre-wrap;
-}
-
-@media (max-width: 900px) {
-  .header,
-  .mqttPanel {
-    grid-template-columns: 1fr;
+@media (max-width: 760px) {
+  .page {
+    padding: 28px 16px;
   }
 
   .header {
     align-items: flex-start;
-  }
-
-  .mqttGrid,
-  .contentGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 560px) {
-  .page {
-    padding: 32px 16px;
+    flex-direction: column;
   }
 
   .title {
     font-size: 2rem;
   }
 
-  .headerActions,
-  .primaryButton,
-  .secondaryButton,
-  .copyButton {
+  .openButton {
     width: 100%;
   }
 
-  .specGrid {
-    grid-template-columns: 1fr;
+  .brokerItem {
+    width: 100%;
+  }
+
+  .frameShell {
+    height: calc(100vh - 310px);
+    min-height: 620px;
   }
 }

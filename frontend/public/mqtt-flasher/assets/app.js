@@ -2877,10 +2877,6 @@ async function flashFirmware(kind) {
   let flashArtifacts = [];
 
   try {
-    if (serialConnected) {
-      appendLog("Disconnecting the current serial session before flashing.");
-      await disconnectSerialSession({ silent: true });
-    }
     setFlashProgress(8, "Waiting for serial permission");
     appendLog("Choose the board USB serial port in the browser prompt.");
     port = await navigator.serial.requestPort();
@@ -2888,6 +2884,10 @@ async function flashFirmware(kind) {
       preferredSerialPortInfo = port.getInfo();
     }
     appendLog("Serial device selected for flashing.");
+    if (serialConnected) {
+      appendLog("Disconnecting the current serial session before flashing.");
+      await disconnectSerialSession({ silent: true });
+    }
 
     flashButton.disabled = true;
     updateButton.disabled = true;
@@ -3291,7 +3291,14 @@ wizardNextButton?.addEventListener("click", async () => {
       }
 
       appendLog("Final step reached. Flashing firmware before applying settings.");
-      await flashFirmware("full");
+      try {
+        await flashFirmware("full");
+      } catch (error) {
+        setPanelState(flashState, "Flash failed", "panel__status--error");
+        stateFlash.textContent = "Flash failed";
+        setFlashProgress(0, "Flash failed");
+        appendLog(`Full firmware flash failed: ${error.message}`);
+      }
       updateWizardNav();
       return;
     }

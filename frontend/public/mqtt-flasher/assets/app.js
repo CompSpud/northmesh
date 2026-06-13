@@ -294,6 +294,10 @@ function resolveArtifactUrl(path) {
   return resolveFirmwarePath(path);
 }
 
+function resolveFlasherAssetUrl(path) {
+  return new URL(path.replace(/^\//, ""), new URL("/mqtt-flasher/", window.location.origin)).toString();
+}
+
 function browserCaptureKey(boardId) {
   return `meshcore-mqtt-device-info:${boardId}`;
 }
@@ -2699,7 +2703,7 @@ async function captureCurrentDeviceInfo() {
 
 async function loadEspTool() {
   if (!esptoolModulePromise) {
-    esptoolModulePromise = import("/assets/vendor/esptool-js-bundle.js?v=20260308-1532");
+    esptoolModulePromise = import(resolveFlasherAssetUrl("assets/vendor/esptool-js-bundle.js?v=20260613-flash"));
   }
   return esptoolModulePromise;
 }

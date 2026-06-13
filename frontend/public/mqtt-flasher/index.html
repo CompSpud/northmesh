@@ -204,7 +204,7 @@
                   <p class="panel__eyebrow">Step 3</p>
                   <h2>Which radio profile should it use?</h2>
                 </div>
-                <span class="panel__status panel__status--idle" id="flash-state">Idle</span>
+                <span class="panel__status panel__status--idle" id="flash-state">Not flashed</span>
               </div>
               <div class="step-panel__body">
               <div class="firmware-branch-selector northmesh-hidden-setting">
@@ -266,7 +266,7 @@
                   <strong id="radio-command">set radio 869.525,62.5,8,5</strong>
                 </div>
               </div>
-              <div class="action-row">
+              <div class="action-row northmesh-hidden-setting">
                     <button class="button button--primary" id="flash-button" type="button">Flash Firmware</button>
                     <button class="button button--secondary northmesh-hidden-setting" id="update-button" type="button">Flash Update Only</button>
                     <button class="button button--ghost northmesh-hidden-setting" id="manifest-button" type="button">View Manifest</button>
@@ -291,7 +291,7 @@
                 </div>
               </div>
               <div class="note-list">
-                <p>Choose the closest profile for your region. The flasher applies this radio profile after firmware is written.</p>
+                <p>Choose the closest profile for your region. The firmware flash happens after the remaining questions.</p>
                 <p class="advanced-only">The preset populates the MeshCore CLI command, but you can edit frequency, bandwidth, SF, and CR manually.</p>
                 <p class="advanced-only">The browser handles flashing over Web Serial locally. Firmware binaries are served from this host only.</p>
               </div>
@@ -788,7 +788,7 @@
               <div class="panel__header">
                 <div>
                   <p class="panel__eyebrow">Step 6</p>
-                  <h2>Ready to apply settings?</h2>
+                  <h2>Ready to flash and apply settings?</h2>
                 </div>
                 <span class="panel__status panel__status--idle" id="serial-state">Serial disconnected</span>
               </div>
@@ -875,6 +875,6 @@
     </div>
 
     <script src="assets/firmware-data.js?v=20260314-2300"></script>
-    <script src="assets/app.js?v=20260613-flash-path"></script>
+    <script src="assets/app.js?v=20260613-flash-last"></script>
   </body>
 </html>

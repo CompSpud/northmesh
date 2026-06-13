@@ -100,6 +100,7 @@ const capSummary = document.getElementById("cap-summary");
 let firmwareData = window.FIRMWARE_DATA || { boards: [] };
 const FIRMWARE_FETCH_VERSION = "20260613-1610";
 const REMOTE_FLASHER_ROOT = "https://raw.githubusercontent.com/gadgethd/MeshCore-MQTT-Webflasher/master/";
+const REQUIRED_FIRMWARE_VERSION = "v1.16.0";
 const UI_MODE_STORAGE_KEY = "meshcore-mqtt-ui-mode";
 const UI_MODES = {
   SIMPLE: "simple",
@@ -148,7 +149,7 @@ const STEP_TITLES = {
   "flash-firmware": "Which radio profile should it use?",
   "device-settings": "What WiFi should it use?",
   "mqtt-settings": "What are the MQTT credentials?",
-  "configure-device": "Ready to apply settings?"
+  "configure-device": "Ready to flash and apply settings?"
 };
 let activeStepId = "read-device";
 let uiMode = null;
@@ -275,6 +276,14 @@ function humanFlashPackage(board) {
     return "full + update";
   }
   return "full";
+}
+
+function selectedFirmwareIsCurrent() {
+  return String(currentBoard?.firmwareVersion || "").trim() === REQUIRED_FIRMWARE_VERSION;
+}
+
+function explainFirmwareVersionMismatch() {
+  return `Selected firmware is ${currentBoard?.firmwareVersion || "unknown"}, but NorthMesh requires ${REQUIRED_FIRMWARE_VERSION}.`;
 }
 
 function resolveFirmwarePath(path) {
@@ -891,7 +900,19 @@ function updateWizardNav() {
   }
   if (wizardNextButton) {
     const isFinalStep = stepIndex === STEP_ORDER.length - 1;
-    wizardNextButton.textContent = isFinalStep ? "Apply Settings" : "Next";
+    if (!isFinalStep) {
+      wizardNextButton.textContent = "Next";
+      wizardNextButton.disabled = false;
+    } else if (flashingNow) {
+      wizardNextButton.textContent = "Flashing...";
+      wizardNextButton.disabled = true;
+    } else if (!flashComplete) {
+      wizardNextButton.textContent = "Flash Firmware";
+      wizardNextButton.disabled = !selectedFirmwareIsCurrent();
+    } else {
+      wizardNextButton.textContent = "Apply Settings";
+      wizardNextButton.disabled = false;
+    }
   }
 }
 
@@ -924,7 +945,6 @@ function recommendedStepId() {
   if (!uiMode) return null;
   if (!capturedDeviceInfo) return "read-device";
   if (!currentBoard || !boardSelectionConfirmed) return "choose-board";
-  if (!flashComplete) return "flash-firmware";
   if (!configApplied) {
     return serialConnected ? "mqtt-settings" : "device-settings";
   }
@@ -1352,9 +1372,17 @@ function setBoardDetails(board, { userSelected = false } = {}) {
   buildCommandPreview();
   updateBrokerTopicPreviews();
 
-  const flashReady = Boolean(board.artifactBase && board.chipFamily);
+  const flashReady = Boolean(board.artifactBase && board.chipFamily && selectedFirmwareIsCurrent());
   flashButton.disabled = !flashReady || flashingNow;
   updateButton.disabled = !flashReady || flashingNow;
+  if (!selectedFirmwareIsCurrent()) {
+    setPanelState(flashState, "Firmware update required", "panel__status--error");
+    setFlashProgress(0, explainFirmwareVersionMismatch());
+    appendLog(explainFirmwareVersionMismatch());
+  } else if (!flashComplete) {
+    setPanelState(flashState, "Ready after questions", "panel__status--ready");
+    setFlashProgress(0, "Firmware will flash at the end");
+  }
   renderBoardOptions();
 }
 
@@ -2809,6 +2837,12 @@ async function flashFirmware(kind) {
     appendLog("Firmware artifact is not published for this board yet.");
     return;
   }
+  if (!selectedFirmwareIsCurrent()) {
+    setPanelState(flashState, "Firmware update required", "panel__status--error");
+    setFlashProgress(0, explainFirmwareVersionMismatch());
+    appendLog(explainFirmwareVersionMismatch());
+    return;
+  }
   if (!window.isSecureContext && location.hostname !== "127.0.0.1" && location.hostname !== "localhost") {
     throw new Error("Flashing requires HTTPS or localhost");
   }
@@ -2913,12 +2947,14 @@ async function flashFirmware(kind) {
     setPanelState(serialState, "Reconnect serial", "panel__status--idle");
     setPanelState(verifyState, "Waiting", "panel__status--idle");
     updateSerialButton();
+    updateWizardNav();
     appendLog(`Flash completed successfully for ${currentBoard.label}. Reconnect serial, then apply the selected device, WiFi, and MQTT settings.`);
     // Don't auto-switch tabs - let user navigate manually
   } finally {
     flashingNow = false;
-    flashButton.disabled = !currentBoard?.artifactBase;
-    updateButton.disabled = !currentBoard?.artifactBase;
+    flashButton.disabled = !currentBoard?.artifactBase || !selectedFirmwareIsCurrent();
+    updateButton.disabled = !currentBoard?.artifactBase || !selectedFirmwareIsCurrent();
+    updateWizardNav();
     window.setTimeout(() => {
       releaseFlashSession(transport, port)
         .then(() => {
@@ -3223,6 +3259,19 @@ wizardBackButton?.addEventListener("click", () => {
 
 wizardNextButton?.addEventListener("click", async () => {
   if (activeStepId === "configure-device") {
+    if (!flashComplete) {
+      if (!selectedFirmwareIsCurrent()) {
+        setPanelState(flashState, "Firmware update required", "panel__status--error");
+        appendLog(explainFirmwareVersionMismatch());
+        return;
+      }
+
+      appendLog("Final step reached. Flashing firmware before applying settings.");
+      await flashFirmware("full");
+      updateWizardNav();
+      return;
+    }
+
     await applySettings("all");
     return;
   }
@@ -3275,7 +3324,11 @@ async function applySettings(mode = "all") {
   }
 
   if (!flashComplete) {
-    appendLog("Proceeding with configuration without a flash in this session.");
+    appendLog("Flash the firmware before applying all settings.");
+    if (mode === "all") {
+      setPanelState(flashState, "Flash required", "panel__status--error");
+      return;
+    }
   }
 
   setPanelState(settingsState, "Writing", "panel__status--busy");

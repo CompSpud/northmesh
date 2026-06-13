@@ -99,7 +99,7 @@ const capSummary = document.getElementById("cap-summary");
 
 let firmwareData = window.FIRMWARE_DATA || { boards: [] };
 const FIRMWARE_FETCH_VERSION = "20260613-1610";
-const REMOTE_FLASHER_ROOT = "https://raw.githubusercontent.com/gadgethd/MeshCore-MQTT-Webflasher/refs/heads/master/";
+const REMOTE_FLASHER_ROOT = "https://raw.githubusercontent.com/gadgethd/MeshCore-MQTT-Webflasher/master/";
 const UI_MODE_STORAGE_KEY = "meshcore-mqtt-ui-mode";
 const UI_MODES = {
   SIMPLE: "simple",

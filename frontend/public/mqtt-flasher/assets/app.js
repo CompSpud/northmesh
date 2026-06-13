@@ -286,6 +286,19 @@ function explainFirmwareVersionMismatch() {
   return `Selected firmware is ${currentBoard?.firmwareVersion || "unknown"}, but NorthMesh requires ${REQUIRED_FIRMWARE_VERSION}.`;
 }
 
+function explainFlashUnavailable() {
+  if (!currentBoard) {
+    return "Choose a board before flashing.";
+  }
+  if (!currentBoard.artifactBase || !currentBoard.chipFamily) {
+    return "Firmware artifact is not published for this board yet.";
+  }
+  if (!selectedFirmwareIsCurrent()) {
+    return explainFirmwareVersionMismatch();
+  }
+  return "";
+}
+
 function resolveFirmwarePath(path) {
   if (/^https?:\/\//i.test(path)) {
     return path;
@@ -906,12 +919,20 @@ function updateWizardNav() {
     } else if (flashingNow) {
       wizardNextButton.textContent = "Flashing...";
       wizardNextButton.disabled = true;
+      wizardNextButton.removeAttribute("title");
     } else if (!flashComplete) {
       wizardNextButton.textContent = "Flash Firmware";
-      wizardNextButton.disabled = !selectedFirmwareIsCurrent();
+      wizardNextButton.disabled = false;
+      const unavailableReason = explainFlashUnavailable();
+      if (unavailableReason) {
+        wizardNextButton.setAttribute("title", unavailableReason);
+      } else {
+        wizardNextButton.removeAttribute("title");
+      }
     } else {
       wizardNextButton.textContent = "Apply Settings";
       wizardNextButton.disabled = false;
+      wizardNextButton.removeAttribute("title");
     }
   }
 }
@@ -3260,9 +3281,12 @@ wizardBackButton?.addEventListener("click", () => {
 wizardNextButton?.addEventListener("click", async () => {
   if (activeStepId === "configure-device") {
     if (!flashComplete) {
-      if (!selectedFirmwareIsCurrent()) {
+      const unavailableReason = explainFlashUnavailable();
+      if (unavailableReason) {
         setPanelState(flashState, "Firmware update required", "panel__status--error");
-        appendLog(explainFirmwareVersionMismatch());
+        setFlashProgress(0, unavailableReason);
+        appendLog(unavailableReason);
+        updateWizardNav();
         return;
       }
 

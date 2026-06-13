@@ -98,7 +98,7 @@ const capOverall = document.getElementById("cap-overall");
 const capSummary = document.getElementById("cap-summary");
 
 let firmwareData = window.FIRMWARE_DATA || { boards: [] };
-const FIRMWARE_FETCH_VERSION = "20260613-1716";
+const FIRMWARE_FETCH_VERSION = "20260613-t114";
 const REMOTE_FLASHER_ROOT = "https://raw.githubusercontent.com/gadgethd/MeshCore-MQTT-Webflasher/master/";
 const REQUIRED_FIRMWARE_VERSION = "v1.16.0";
 const UI_MODE_STORAGE_KEY = "meshcore-mqtt-ui-mode";
@@ -271,6 +271,8 @@ const NORTHMESH_MQTT_DEFAULTS = {
 };
 const NORTHMESH_FIRMWARE_OVERRIDES = {
   Heltec_v3_repeater: {
+    id: "Heltec_v3_repeater",
+    label: "Heltec v3 Repeater",
     firmwareName: "meshcore",
     firmwareVersion: "v1.16.0",
     hardwareStatus: "Official MeshCore release",
@@ -280,22 +282,43 @@ const NORTHMESH_FIRMWARE_OVERRIDES = {
       full: "Heltec_v3_repeater-v1.16.0-07a3ca9-merged.bin",
       update: "Heltec_v3_repeater-v1.16.0-07a3ca9.bin"
     }
+  },
+  Heltec_t114_repeater: {
+    id: "Heltec_t114_repeater",
+    label: "Heltec T114 Repeater",
+    firmwareName: "meshcore",
+    firmwareVersion: "v1.16.0",
+    chipFamily: "nRF52",
+    hardwareStatus: "Official MeshCore UF2 release",
+    manifestPath: "https://github.com/meshcore-dev/MeshCore/releases/tag/repeater-v1.16.0",
+    artifactBase: "https://github.com/meshcore-dev/MeshCore/releases/download/repeater-v1.16.0/",
+    flashMethod: "uf2",
+    artifacts: {
+      full: "Heltec_t114_repeater-v1.16.0-07a3ca9.uf2",
+      update: "Heltec_t114_repeater-v1.16.0-07a3ca9.zip"
+    }
   }
 };
 
 function applyNorthMeshFirmwareOverrides(data) {
   if (!Array.isArray(data?.boards)) return data;
+  const seenBoardIds = new Set(data.boards.map((board) => board.id));
+  const missingOverrides = Object.values(NORTHMESH_FIRMWARE_OVERRIDES)
+    .filter((board) => !seenBoardIds.has(board.id));
   return {
     ...data,
     boards: data.boards.map((board) => ({
       ...board,
       ...(NORTHMESH_FIRMWARE_OVERRIDES[board.id] || {})
-    }))
+    })).concat(missingOverrides)
   };
 }
 
 function humanFlashPackage(board) {
   if (!board) return "Unavailable";
+  if (board.flashMethod === "uf2") {
+    return "UF2 download";
+  }
   if (board.artifacts && board.artifacts.full && board.artifacts.update) {
     return "full + update";
   }
@@ -304,6 +327,10 @@ function humanFlashPackage(board) {
 
 function selectedFirmwareIsCurrent() {
   return String(currentBoard?.firmwareVersion || "").trim() === REQUIRED_FIRMWARE_VERSION;
+}
+
+function boardUsesUf2Flash(board = currentBoard) {
+  return board?.flashMethod === "uf2";
 }
 
 function explainFirmwareVersionMismatch() {
@@ -945,7 +972,7 @@ function updateWizardNav() {
       wizardNextButton.disabled = true;
       wizardNextButton.removeAttribute("title");
     } else if (!flashComplete) {
-      wizardNextButton.textContent = "Flash Firmware";
+      wizardNextButton.textContent = boardUsesUf2Flash() ? "Download Firmware" : "Flash Firmware";
       wizardNextButton.disabled = false;
       const unavailableReason = explainFlashUnavailable();
       if (unavailableReason) {
@@ -2873,6 +2900,19 @@ async function blobToBinaryString(blob) {
   return result;
 }
 
+function downloadFirmwareArtifact(board, kind) {
+  const imageName = kind === "update" ? (board.artifacts.update || board.artifacts.full) : board.artifacts.full;
+  const imageUrl = resolveArtifactUrl(`${board.artifactBase}${imageName}`);
+  const anchor = document.createElement("a");
+  anchor.href = imageUrl;
+  anchor.download = imageName;
+  anchor.rel = "noopener";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  return imageName;
+}
+
 async function flashFirmware(kind) {
   if (flashingNow) {
     appendLog("Flash already in progress.");
@@ -2886,6 +2926,21 @@ async function flashFirmware(kind) {
     setPanelState(flashState, "Firmware update required", "panel__status--error");
     setFlashProgress(0, explainFirmwareVersionMismatch());
     appendLog(explainFirmwareVersionMismatch());
+    return;
+  }
+  if (boardUsesUf2Flash()) {
+    const imageName = downloadFirmwareArtifact(currentBoard, "full");
+    flashComplete = true;
+    configApplied = false;
+    setPanelState(flashState, "Firmware downloaded", "panel__status--success");
+    setFlashProgress(100, "Copy the UF2 file to the board bootloader drive");
+    setText(stateFlash, "UF2 downloaded");
+    setText(summaryFirmware, imageName);
+    setText(summaryConfig, "Not sent");
+    resetMqttRuntimeState("Awaiting apply", "Awaiting verify");
+    setPanelState(settingsState, "Apply radio + MQTT settings", "panel__status--ready");
+    appendLog(`Downloaded ${imageName}. Put the T114 into UF2 bootloader mode, copy this file to the USB drive, then reconnect serial and apply settings.`);
+    updateWizardNav();
     return;
   }
   if (!window.isSecureContext && location.hostname !== "127.0.0.1" && location.hostname !== "localhost") {

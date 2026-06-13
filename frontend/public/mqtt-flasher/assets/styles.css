@@ -914,8 +914,7 @@ body.serial-initializing textarea {
 
 body.northmesh-guided .mode-gate,
 body.northmesh-guided .mode-tabs,
-body.northmesh-guided .sidebar .panel:first-child,
-body.northmesh-guided .sidebar .panel:nth-child(3),
+body.northmesh-guided .sidebar-capability,
 body.northmesh-guided .settings-actions__note,
 body.northmesh-guided .settings-actions,
 body.northmesh-guided #download-backup-button,
@@ -993,6 +992,10 @@ body.northmesh-guided .mqtt-broker-card--pair {
 
 body.northmesh-guided .mqtt-topic-preview {
   margin-top: 10px;
+}
+
+body.northmesh-guided .sidebar-log {
+  display: grid;
 }
 
 body.mode-simple .advanced-only,

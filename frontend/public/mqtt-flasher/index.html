@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MeshCore MQTT Web Flasher</title>
-    <link rel="stylesheet" href="assets/styles.css?v=20260611-guided">
+    <link rel="stylesheet" href="assets/styles.css?v=20260613-log">
   </head>
   <body class="northmesh-guided">
     <div class="app-shell">
@@ -817,8 +817,7 @@
         </section>
 
         <aside class="sidebar">
-          <section class="panel panel--compact">
-          <section class="panel panel--compact">
+          <section class="panel panel--compact sidebar-capability">
             <div class="panel__header">
               <div>
                 <p class="panel__eyebrow">Browser</p>
@@ -831,7 +830,7 @@
             </div>
           </section>
 
-          <section class="panel panel--compact">
+          <section class="panel panel--compact sidebar-state">
             <div class="panel__header">
               <div>
                 <p class="panel__eyebrow">Connection</p>
@@ -858,13 +857,13 @@
             </div>
           </section>
 
-          <section class="panel panel--compact">
+          <section class="panel panel--compact sidebar-log">
             <div class="panel__header">
               <div>
                 <p class="panel__eyebrow">Live Output</p>
                 <h2>Serial Log</h2>
               </div>
-              <button class="button button--ghost button--small" id="clear-log-button">Clear</button>
+              <button class="button button--ghost button--small" id="clear-log-button" type="button">Clear</button>
             </div>
             <div class="log-pane" id="log-pane" aria-live="polite">
               <p><span>13:20:40</span> Ready. Select a board and start flashing.</p>
@@ -876,6 +875,6 @@
     </div>
 
     <script src="assets/firmware-data.js?v=20260314-2300"></script>
-    <script src="assets/app.js?v=20260611-guided"></script>
+    <script src="assets/app.js?v=20260613-log"></script>
   </body>
 </html>

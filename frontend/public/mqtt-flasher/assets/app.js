@@ -98,7 +98,7 @@ const capOverall = document.getElementById("cap-overall");
 const capSummary = document.getElementById("cap-summary");
 
 let firmwareData = window.FIRMWARE_DATA || { boards: [] };
-const FIRMWARE_FETCH_VERSION = "20260613-1610";
+const FIRMWARE_FETCH_VERSION = "20260613-1716";
 const REMOTE_FLASHER_ROOT = "https://raw.githubusercontent.com/gadgethd/MeshCore-MQTT-Webflasher/master/";
 const REQUIRED_FIRMWARE_VERSION = "v1.16.0";
 const UI_MODE_STORAGE_KEY = "meshcore-mqtt-ui-mode";
@@ -269,6 +269,30 @@ const NORTHMESH_MQTT_DEFAULTS = {
   iata: "uk",
   retainStatus: "0"
 };
+const NORTHMESH_FIRMWARE_OVERRIDES = {
+  Heltec_v3_repeater: {
+    firmwareName: "meshcore",
+    firmwareVersion: "v1.16.0",
+    hardwareStatus: "Official MeshCore release",
+    manifestPath: "https://github.com/meshcore-dev/MeshCore/releases/tag/repeater-v1.16.0",
+    artifactBase: "https://github.com/meshcore-dev/MeshCore/releases/download/repeater-v1.16.0/",
+    artifacts: {
+      full: "Heltec_v3_repeater-v1.16.0-07a3ca9-merged.bin",
+      update: "Heltec_v3_repeater-v1.16.0-07a3ca9.bin"
+    }
+  }
+};
+
+function applyNorthMeshFirmwareOverrides(data) {
+  if (!Array.isArray(data?.boards)) return data;
+  return {
+    ...data,
+    boards: data.boards.map((board) => ({
+      ...board,
+      ...(NORTHMESH_FIRMWARE_OVERRIDES[board.id] || {})
+    }))
+  };
+}
 
 function humanFlashPackage(board) {
   if (!board) return "Unavailable";
@@ -1413,7 +1437,7 @@ async function loadFirmwareDataForBranch(branch) {
   try {
     const isMain = branch === "main";
     try {
-      firmwareData = await loadLatestFirmwareData(branch);
+      firmwareData = applyNorthMeshFirmwareOverrides(await loadLatestFirmwareData(branch));
       boardManifestCache.clear();
 
       const branchLabel = isMain ? "" : ` (${branch.toUpperCase()})`;
@@ -1439,7 +1463,7 @@ async function loadFirmwareDataForBranch(branch) {
       ? "/mqtt-flasher/assets/firmware-data.js"
       : `/mqtt-flasher/assets/firmware-data-${branch}.js`;
     const bundledData = await fetchFirmwareDataModule(bundledDataUrl);
-    firmwareData = bundledData;
+    firmwareData = applyNorthMeshFirmwareOverrides(bundledData);
     boardManifestCache.clear();
 
     const branchLabel = isMain ? "" : ` (${branch.toUpperCase()})`;

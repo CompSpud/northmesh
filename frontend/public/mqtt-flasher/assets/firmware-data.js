@@ -4,15 +4,15 @@ window.FIRMWARE_DATA = {
     {
       "id": "Heltec_v3_repeater",
       "label": "Heltec v3 Repeater",
-      "firmwareName": "meshcore-mqtt",
-      "firmwareVersion": "v1.14.0",
+      "firmwareName": "meshcore",
+      "firmwareVersion": "v1.16.0",
       "chipFamily": "ESP32-S3",
-      "hardwareStatus": "Verified on hardware",
-      "manifestPath": "/mqtt-flasher/firmware/Heltec_v3_repeater/manifest.json",
-      "artifactBase": "/mqtt-flasher/firmware/Heltec_v3_repeater/",
+      "hardwareStatus": "Official MeshCore release",
+      "manifestPath": "https://github.com/meshcore-dev/MeshCore/releases/tag/repeater-v1.16.0",
+      "artifactBase": "https://github.com/meshcore-dev/MeshCore/releases/download/repeater-v1.16.0/",
       "artifacts": {
-        "full": "meshcore-mqtt-v1.14.0-Heltec_v3_repeater-full-c8d5.bin",
-        "update": "meshcore-mqtt-v1.14.0-Heltec_v3_repeater-update-7a49.bin"
+        "full": "Heltec_v3_repeater-v1.16.0-07a3ca9-merged.bin",
+        "update": "Heltec_v3_repeater-v1.16.0-07a3ca9.bin"
       }
     },
     {

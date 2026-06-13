@@ -98,7 +98,8 @@ const capOverall = document.getElementById("cap-overall");
 const capSummary = document.getElementById("cap-summary");
 
 let firmwareData = window.FIRMWARE_DATA || { boards: [] };
-const FIRMWARE_FETCH_VERSION = "20260309-2102";
+const FIRMWARE_FETCH_VERSION = "20260613-1610";
+const REMOTE_FLASHER_ROOT = "https://raw.githubusercontent.com/gadgethd/MeshCore-MQTT-Webflasher/refs/heads/master/";
 const UI_MODE_STORAGE_KEY = "meshcore-mqtt-ui-mode";
 const UI_MODES = {
   SIMPLE: "simple",
@@ -276,8 +277,21 @@ function humanFlashPackage(board) {
   return "full";
 }
 
-function resolveArtifactUrl(path) {
+function resolveFirmwarePath(path) {
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+  if (firmwareData?.sourceRoot && path.startsWith("/mqtt-flasher/")) {
+    return new URL(path.replace(/^\/mqtt-flasher\//, ""), firmwareData.sourceRoot).toString();
+  }
+  if (firmwareData?.sourceRoot && path.startsWith("/firmware/")) {
+    return new URL(path.replace(/^\//, ""), firmwareData.sourceRoot).toString();
+  }
   return new URL(path, window.location.href).toString();
+}
+
+function resolveArtifactUrl(path) {
+  return resolveFirmwarePath(path);
 }
 
 function browserCaptureKey(boardId) {
@@ -758,6 +772,38 @@ function syncAllBrokerDefaultTopicTogglesFromValues() {
   for (let index = 1; index <= MQTT_MAX_BROKERS; index += 1) {
     syncBrokerDefaultTopicToggleFromValue(index);
   }
+}
+
+async function fetchFirmwareDataModule(url) {
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Firmware data request failed (${response.status})`);
+  }
+
+  const source = await response.text();
+  const match = source.match(/window\.FIRMWARE_DATA\s*=\s*({[\s\S]*?})\s*;?\s*$/);
+  if (!match) {
+    throw new Error("Firmware data file did not contain window.FIRMWARE_DATA");
+  }
+
+  return JSON.parse(match[1]);
+}
+
+async function loadLatestFirmwareData(branch = "main") {
+  const branchPath = branch === "dev" ? "assets/firmware-data-dev.js" : "assets/firmware-data.js";
+  const sourceRoot = REMOTE_FLASHER_ROOT;
+  const dataUrl = new URL(branchPath, sourceRoot);
+  dataUrl.searchParams.set("v", FIRMWARE_FETCH_VERSION);
+  const data = await fetchFirmwareDataModule(dataUrl.toString());
+
+  if (!Array.isArray(data.boards) || data.boards.length === 0) {
+    throw new Error("Firmware data did not include any boards");
+  }
+
+  return {
+    ...data,
+    sourceRoot
+  };
 }
 
 function updateModeButtons() {
@@ -1312,40 +1358,17 @@ async function loadFirmwareDataForBranch(branch) {
   appendLog(`Loading firmware data for branch: ${branch}...`);
 
   try {
-    // Determine the firmware data URL based on branch
     const isMain = branch === "main";
-    const firmwareDataUrl = isMain
-      ? "/mqtt-flasher/assets/firmware-data.js"
-      : `/mqtt-flasher/assets/firmware-data-${branch}.js`;
-
-    // Fetch the firmware data script
-    const response = await fetch(firmwareDataUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${branch} firmware data`);
-    }
-
-    // Get the script text and evaluate it
-    const scriptText = await response.text();
-
-    // Create a new script element and execute it
-    const script = document.createElement("script");
-    script.textContent = scriptText;
-    document.head.appendChild(script);
-
-    // Update the global FIRMWARE_DATA
-    if (window.FIRMWARE_DATA && window.FIRMWARE_DATA.boards) {
-      firmwareData = window.FIRMWARE_DATA;
+    try {
+      firmwareData = await loadLatestFirmwareData(branch);
       boardManifestCache.clear();
 
-      // Update version display to show branch
       const branchLabel = isMain ? "" : ` (${branch.toUpperCase()})`;
       firmwareVersion.textContent = `${firmwareData.boards[0]?.firmwareVersion || "Unknown"}${branchLabel}`;
       firmwareFamily.textContent = `${firmwareData.boards[0]?.firmwareName || "meshcore-mqtt"}${branchLabel}`;
 
-      // Repopulate boards with new data
       populateBoards();
 
-      // If a board was selected, refresh its details
       if (currentBoard) {
         const newBoard = firmwareData.boards.find((b) => b.id === currentBoard.id);
         if (newBoard) {
@@ -1353,10 +1376,33 @@ async function loadFirmwareDataForBranch(branch) {
         }
       }
 
-      appendLog(`Loaded ${firmwareData.boards.length} board definitions for ${branch} branch.`);
-    } else {
-      throw new Error("Invalid firmware data format");
+      appendLog(`Loaded ${firmwareData.boards.length} current board definitions from upstream firmware data.`);
+      return;
+    } catch (remoteError) {
+      appendLog(`Current firmware data unavailable: ${remoteError.message}. Using bundled firmware data.`);
     }
+
+    const bundledDataUrl = isMain
+      ? "/mqtt-flasher/assets/firmware-data.js"
+      : `/mqtt-flasher/assets/firmware-data-${branch}.js`;
+    const bundledData = await fetchFirmwareDataModule(bundledDataUrl);
+    firmwareData = bundledData;
+    boardManifestCache.clear();
+
+    const branchLabel = isMain ? "" : ` (${branch.toUpperCase()})`;
+    firmwareVersion.textContent = `${firmwareData.boards[0]?.firmwareVersion || "Unknown"}${branchLabel}`;
+    firmwareFamily.textContent = `${firmwareData.boards[0]?.firmwareName || "meshcore-mqtt"}${branchLabel}`;
+
+    populateBoards();
+
+    if (currentBoard) {
+      const newBoard = firmwareData.boards.find((b) => b.id === currentBoard.id);
+      if (newBoard) {
+        setBoardDetails(newBoard, { userSelected: true });
+      }
+    }
+
+    appendLog(`Loaded ${firmwareData.boards.length} bundled board definitions for ${branch} branch.`);
   } catch (error) {
     appendLog(`Warning: Could not load ${branch} firmware data: ${error.message}`);
     // Revert to main if dev fails
@@ -3360,4 +3406,5 @@ buildCommandPreview();
 updateSerialButton();
 updateBackupExportAvailability();
 closeBoardMenu();
-appendLog(`Loaded ${firmwareData.boards.length} board definitions.`);
+appendLog(`Loaded ${firmwareData.boards.length} bundled board definitions.`);
+loadFirmwareDataForBranch("main");

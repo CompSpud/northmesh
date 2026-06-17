@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Radio, Wifi, Activity, Clock, Filter } from 'lucide-react'
 import { useNodeStore } from '../hooks/useNodes'
 import { useWebSocket } from '../hooks/useWebSocket'
+import SEO from '../components/SEO'
 import styles from './NetworkPage.module.css'
 
 const ROLE_LABELS: Record<number, string> = {
@@ -68,6 +69,11 @@ export default function NetworkPage() {
 
   return (
     <div className={styles.page}>
+      <SEO
+        title="MeshCore Network Stats"
+        description="View NorthMesh MeshCore network statistics, repeater status, active nodes, packet counts, roles, hardware models, and last-seen data for the UK LoRa mesh."
+        path="/network"
+      />
       <div className={styles.header}>
         <h1 className={styles.title}>Network Overview</h1>
         <p className={styles.subtitle}>Detailed statistics and node management</p>

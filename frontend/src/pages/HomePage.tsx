@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Radio, Activity, Globe, Zap } from 'lucide-react'
 import { useNodeStore } from '../hooks/useNodes'
 import { useWebSocket } from '../hooks/useWebSocket'
+import SEO, { SITE_URL } from '../components/SEO'
 import styles from './HomePage.module.css'
 
 function StatCard({ icon: Icon, value, label }: { icon: React.ElementType; value: number | string; label: string }) {
@@ -21,6 +22,30 @@ export default function HomePage() {
 
   return (
     <div className={styles.page}>
+      <SEO
+        title="NorthMesh - UK MeshCore LoRa Network Map"
+        description="NorthMesh is a live MeshCore and LoRa mesh network map for northern England and the wider UK, showing repeaters, packet activity, RF coverage, and community infrastructure."
+        path="/"
+        structuredData={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'NorthMesh',
+            url: SITE_URL,
+            description: 'Live MeshCore LoRa mesh network map, node directory, and firmware flasher for NorthMesh in the UK.',
+            inLanguage: 'en-GB'
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'NorthMesh',
+            url: SITE_URL,
+            sameAs: [discordUrl],
+            areaServed: ['Northern England', 'United Kingdom'],
+            knowsAbout: ['MeshCore', 'LoRa', 'mesh networking', 'repeaters', 'MQTT']
+          }
+        ]}
+      />
       <section className={styles.hero}>
         <div className={styles.auroraBg} />
         <div className={styles.heroContent}>

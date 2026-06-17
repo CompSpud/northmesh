@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { useNodeStore, Node } from '../hooks/useNodes'
 import { useWebSocket } from '../hooks/useWebSocket'
 import { Layers, Info, X, Maximize2 } from 'lucide-react'
+import SEO from '../components/SEO'
 import styles from './MapPage.module.css'
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
@@ -205,6 +206,11 @@ export default function MapPage() {
 
   return (
     <div className={styles.page}>
+      <SEO
+        title="Live MeshCore Map"
+        description="Explore the live NorthMesh map of MeshCore LoRa repeaters and nodes across northern England, including online status, mapped positions, and packet activity."
+        path="/map"
+      />
       <div ref={mapContainer} className={styles.mapContainer} />
 
       <div className={styles.overlay}>

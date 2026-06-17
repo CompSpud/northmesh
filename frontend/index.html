@@ -4,14 +4,63 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="NorthMesh - Real-time mesh network visualization for northern UK. Monitor MeshCore nodes, track packet flow, and explore network coverage." />
+    <meta name="description" content="NorthMesh is a live MeshCore and LoRa mesh network map for northern England and the UK. Monitor repeaters, packet activity, RF coverage, and MQTT-connected nodes." />
+    <meta name="keywords" content="NorthMesh, MeshCore, LoRa, mesh network, UK mesh network, northern England, repeater, MQTT, radio network, off-grid communications" />
+    <meta name="author" content="NorthMesh" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#060a12" />
+    <link rel="canonical" href="https://northmesh.co.uk/" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <meta property="og:site_name" content="NorthMesh" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="NorthMesh - UK MeshCore LoRa Network Map" />
+    <meta property="og:description" content="Explore the live NorthMesh map, MeshCore repeater status, packet activity, and browser-based firmware flasher for supported LoRa boards." />
+    <meta property="og:url" content="https://northmesh.co.uk/" />
+    <meta property="og:image" content="https://northmesh.co.uk/og-image.svg" />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="NorthMesh - UK MeshCore LoRa Network Map" />
+    <meta name="twitter:description" content="Live MeshCore and LoRa mesh network map for northern England, with repeater stats, packet activity, and a NorthMesh firmware flasher." />
+    <meta name="twitter:image" content="https://northmesh.co.uk/og-image.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <title>NorthMesh - Connecting the North</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "NorthMesh",
+        "url": "https://northmesh.co.uk/",
+        "description": "Live MeshCore LoRa mesh network map, node directory, and firmware flasher for NorthMesh in the UK.",
+        "inLanguage": "en-GB",
+        "publisher": {
+          "@type": "Organization",
+          "name": "NorthMesh",
+          "url": "https://northmesh.co.uk/"
+        }
+      }
+    </script>
+    <title>NorthMesh - UK MeshCore LoRa Network Map</title>
   </head>
   <body>
+    <noscript>
+      <main>
+        <h1>NorthMesh</h1>
+        <p>
+          NorthMesh is a live MeshCore and LoRa mesh network map for northern England and the UK.
+          The site tracks repeaters, packet activity, RF coverage, MQTT-connected nodes, and provides
+          a browser-based MeshCore repeater flasher for supported boards.
+        </p>
+        <p>
+          Enable JavaScript to view the live map, network stats, and firmware flasher.
+        </p>
+        <nav aria-label="NorthMesh sections">
+          <a href="/map">Live MeshCore map</a>
+          <a href="/network">Network statistics</a>
+          <a href="/mqtt-flasher/">MQTT repeater flasher</a>
+        </nav>
+      </main>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

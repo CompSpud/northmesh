@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">NorthMesh</title>
+  <desc id="desc">NorthMesh MeshCore LoRa network map preview</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06111f"/>
+      <stop offset="0.55" stop-color="#081827"/>
+      <stop offset="1" stop-color="#06120d"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00e5cc"/>
+      <stop offset="0.55" stop-color="#00d4ff"/>
+      <stop offset="1" stop-color="#34f5a0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g opacity="0.2" stroke="#6ee7f9" stroke-width="1">
+    <path d="M0 120h1200M0 240h1200M0 360h1200M0 480h1200"/>
+    <path d="M160 0v630M320 0v630M480 0v630M640 0v630M800 0v630M960 0v630"/>
+  </g>
+  <g stroke="url(#line)" stroke-width="4" fill="none" opacity="0.78">
+    <path d="M214 394 378 278 560 344 740 212 940 302"/>
+    <path d="M378 278 438 458 672 470 740 212"/>
+    <path d="M560 344 672 470 940 302"/>
+  </g>
+  <g fill="#06111f" stroke="url(#line)" stroke-width="5">
+    <circle cx="214" cy="394" r="17"/>
+    <circle cx="378" cy="278" r="22"/>
+    <circle cx="438" cy="458" r="15"/>
+    <circle cx="560" cy="344" r="20"/>
+    <circle cx="672" cy="470" r="18"/>
+    <circle cx="740" cy="212" r="24"/>
+    <circle cx="940" cy="302" r="21"/>
+  </g>
+  <g fill="#e8f4ff">
+    <text x="80" y="140" font-family="Arial, Helvetica, sans-serif" font-size="82" font-weight="700">NorthMesh</text>
+    <text x="84" y="205" font-family="Arial, Helvetica, sans-serif" font-size="34" fill="#9eddf4">UK MeshCore LoRa Network Map</text>
+    <text x="84" y="534" font-family="Arial, Helvetica, sans-serif" font-size="28" fill="#bfe8f8">Live repeaters. Packet activity. Browser flasher.</text>
+  </g>
+</svg>

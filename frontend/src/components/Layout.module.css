@@ -104,6 +104,27 @@
   gap: 12px;
 }
 
+.loginBtn {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 8px 14px;
+  border: 1px solid rgba(0, 212, 255, 0.28);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.loginBtn:hover,
+.activeLogin {
+  color: var(--bg-void);
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
 .discordBtn {
   display: flex;
   align-items: center;
@@ -171,5 +192,9 @@
 
   .discordBtn span {
     display: none;
+  }
+
+  .loginBtn {
+    padding: 8px 10px;
   }
 }

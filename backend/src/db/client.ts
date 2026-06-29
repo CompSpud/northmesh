@@ -141,3 +141,32 @@ export async function upsertNode(node: {
     console.error(`[DB] Failed to upsert node ${node.node_id}:`, error)
   }
 }
+
+export async function updateManagedNode(nodeId: string, updates: {
+  name?: string
+  role?: number | null
+  lat?: number | null
+  lon?: number | null
+  location_locked?: boolean
+}): Promise<void> {
+  await ensureNodesTable()
+
+  await db.query(
+    `UPDATE nodes
+     SET name = COALESCE($2, name),
+         role = COALESCE($3, role),
+         lat = $4,
+         lon = $5,
+         location_locked = $6,
+         is_manual = CASE WHEN is_mqtt_node THEN is_manual ELSE TRUE END
+     WHERE node_id = $1`,
+    [
+      nodeId,
+      updates.name ?? null,
+      updates.role ?? null,
+      updates.lat ?? null,
+      updates.lon ?? null,
+      updates.location_locked ?? false,
+    ]
+  )
+}

@@ -1,11 +1,20 @@
 import { Router } from 'express'
-import { randomBytes, timingSafeEqual } from 'crypto'
+import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
 import { loadNodes, updateManagedNode } from '../db/client.js'
 
 export const apiRouter = Router()
+const PORTAL_SESSION_MS = 12 * 60 * 60 * 1000
 
 function portalSecret(): string {
   return process.env.PORTAL_ADMIN_TOKEN || process.env.JWT_SECRET || ''
+}
+
+function portalUsername(): string {
+  return process.env.PORTAL_ADMIN_USERNAME || 'admin'
+}
+
+function portalPassword(): string {
+  return process.env.PORTAL_ADMIN_PASSWORD || process.env.PORTAL_ADMIN_TOKEN || ''
 }
 
 function matchesSecret(value: string, secret: string): boolean {
@@ -14,21 +23,51 @@ function matchesSecret(value: string, secret: string): boolean {
   return valueBuffer.length === secretBuffer.length && timingSafeEqual(valueBuffer, secretBuffer)
 }
 
+function signPortalSession(username: string): string {
+  const secret = portalSecret()
+  const payload = Buffer.from(JSON.stringify({
+    username,
+    exp: Date.now() + PORTAL_SESSION_MS,
+  })).toString('base64url')
+  const signature = createHmac('sha256', secret).update(payload).digest('base64url')
+  return `${payload}.${signature}`
+}
+
+function verifyPortalSession(token: string): boolean {
+  const secret = portalSecret()
+  const [payload, signature] = token.split('.')
+
+  if (!secret || !payload || !signature) {
+    return false
+  }
+
+  const expectedSignature = createHmac('sha256', secret).update(payload).digest('base64url')
+  if (!matchesSecret(signature, expectedSignature)) {
+    return false
+  }
+
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as { username?: string; exp?: number }
+    return data.username === portalUsername() && typeof data.exp === 'number' && data.exp > Date.now()
+  } catch {
+    return false
+  }
+}
+
 apiRouter.use('/portal', (req, res, next) => {
   if (req.path === '/login') {
     next()
     return
   }
 
-  const secret = portalSecret()
   const token = String(req.headers['x-portal-token'] || '').trim()
 
-  if (!secret) {
+  if (!portalSecret() || !portalPassword()) {
     res.status(503).json({ error: 'Portal login is not configured yet' })
     return
   }
 
-  if (!token || !matchesSecret(token, secret)) {
+  if (!token || !verifyPortalSession(token)) {
     res.status(401).json({ error: 'Portal login required' })
     return
   }
@@ -66,20 +105,20 @@ apiRouter.get('/stats', (_req, res) => {
 })
 
 apiRouter.post('/portal/login', (req, res) => {
-  const secret = portalSecret()
-  const token = String(req.body?.token || '').trim()
+  const username = String(req.body?.username || '').trim()
+  const password = String(req.body?.password || '')
 
-  if (!secret) {
+  if (!portalSecret() || !portalPassword()) {
     res.status(503).json({ error: 'Portal login is not configured yet' })
     return
   }
 
-  if (!token || !matchesSecret(token, secret)) {
-    res.status(401).json({ error: 'Invalid portal key' })
+  if (!matchesSecret(username, portalUsername()) || !matchesSecret(password, portalPassword())) {
+    res.status(401).json({ error: 'Invalid username or password' })
     return
   }
 
-  res.json({ ok: true, role: 'admin' })
+  res.json({ ok: true, role: 'admin', token: signPortalSession(username) })
 })
 
 apiRouter.get('/portal/nodes', async (_req, res) => {

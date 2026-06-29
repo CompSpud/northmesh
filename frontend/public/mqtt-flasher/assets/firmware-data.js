@@ -31,6 +31,21 @@ window.FIRMWARE_DATA = {
       }
     },
     {
+      "id": "waveshare_rp2040_lora_repeater",
+      "label": "Waveshare RP2040 LoRa Repeater",
+      "firmwareName": "meshcore",
+      "firmwareVersion": "v1.16.0",
+      "chipFamily": "RP2040",
+      "hardwareStatus": "Official MeshCore UF2 release",
+      "manifestPath": "https://github.com/meshcore-dev/MeshCore/releases/tag/repeater-v1.16.0",
+      "artifactBase": "https://github.com/meshcore-dev/MeshCore/releases/download/repeater-v1.16.0/",
+      "flashMethod": "uf2",
+      "artifacts": {
+        "full": "waveshare_rp2040_lora_repeater-v1.16.0-07a3ca9.uf2",
+        "update": "waveshare_rp2040_lora_repeater-v1.16.0-07a3ca9.bin"
+      }
+    },
+    {
       "id": "RAK_3112_repeater",
       "label": "RAK 3112",
       "firmwareName": "meshcore-mqtt",

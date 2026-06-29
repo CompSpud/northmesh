@@ -98,7 +98,7 @@ const capOverall = document.getElementById("cap-overall");
 const capSummary = document.getElementById("cap-summary");
 
 let firmwareData = window.FIRMWARE_DATA || { boards: [] };
-const FIRMWARE_FETCH_VERSION = "20260613-t114";
+const FIRMWARE_FETCH_VERSION = "20260629-waveshare";
 const REMOTE_FLASHER_ROOT = "https://raw.githubusercontent.com/gadgethd/MeshCore-MQTT-Webflasher/master/";
 const REQUIRED_FIRMWARE_VERSION = "v1.16.0";
 const UI_MODE_STORAGE_KEY = "meshcore-mqtt-ui-mode";
@@ -296,6 +296,21 @@ const NORTHMESH_FIRMWARE_OVERRIDES = {
     artifacts: {
       full: "Heltec_t114_repeater-v1.16.0-07a3ca9.uf2",
       update: "Heltec_t114_repeater-v1.16.0-07a3ca9.zip"
+    }
+  },
+  waveshare_rp2040_lora_repeater: {
+    id: "waveshare_rp2040_lora_repeater",
+    label: "Waveshare RP2040 LoRa Repeater",
+    firmwareName: "meshcore",
+    firmwareVersion: "v1.16.0",
+    chipFamily: "RP2040",
+    hardwareStatus: "Official MeshCore UF2 release",
+    manifestPath: "https://github.com/meshcore-dev/MeshCore/releases/tag/repeater-v1.16.0",
+    artifactBase: "https://github.com/meshcore-dev/MeshCore/releases/download/repeater-v1.16.0/",
+    flashMethod: "uf2",
+    artifacts: {
+      full: "waveshare_rp2040_lora_repeater-v1.16.0-07a3ca9.uf2",
+      update: "waveshare_rp2040_lora_repeater-v1.16.0-07a3ca9.bin"
     }
   }
 };
@@ -2939,7 +2954,7 @@ async function flashFirmware(kind) {
     setText(summaryConfig, "Not sent");
     resetMqttRuntimeState("Awaiting apply", "Awaiting verify");
     setPanelState(settingsState, "Apply radio + MQTT settings", "panel__status--ready");
-    appendLog(`Downloaded ${imageName}. Put the T114 into UF2 bootloader mode, copy this file to the USB drive, then reconnect serial and apply settings.`);
+    appendLog(`Downloaded ${imageName}. Put ${currentBoard.label} into UF2 bootloader mode, copy this file to the USB drive, then reconnect serial and apply settings.`);
     updateWizardNav();
     return;
   }

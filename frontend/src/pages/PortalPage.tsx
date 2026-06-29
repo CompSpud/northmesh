@@ -60,7 +60,8 @@ export default function PortalPage() {
   useWebSocket()
   const { nodes: liveNodes, stats } = useNodeStore()
   const [token, setToken] = useState(() => sessionStorage.getItem(PORTAL_TOKEN_KEY) || '')
-  const [tokenInput, setTokenInput] = useState('')
+  const [usernameInput, setUsernameInput] = useState('')
+  const [passwordInput, setPasswordInput] = useState('')
   const [isAuthed, setIsAuthed] = useState(() => Boolean(sessionStorage.getItem(PORTAL_TOKEN_KEY)))
   const [portalNodes, setPortalNodes] = useState<PortalNode[]>([])
   const [selectedNodeId, setSelectedNodeId] = useState('')
@@ -133,15 +134,16 @@ export default function PortalPage() {
       const response = await fetch('/api/portal/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: tokenInput }),
+        body: JSON.stringify({ username: usernameInput, password: passwordInput }),
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Login failed')
 
-      sessionStorage.setItem(PORTAL_TOKEN_KEY, tokenInput)
-      setToken(tokenInput)
+      sessionStorage.setItem(PORTAL_TOKEN_KEY, data.token)
+      setToken(data.token)
       setIsAuthed(true)
-      setTokenInput('')
+      setUsernameInput('')
+      setPasswordInput('')
       setStatus('Logged in')
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : 'Login failed')
@@ -221,11 +223,20 @@ export default function PortalPage() {
           <form className={styles.loginForm} onSubmit={handleLogin}>
             <KeyRound className={styles.loginIcon} size={28} />
             <label className={styles.field}>
-              <span>Portal key</span>
+              <span>Username</span>
+              <input
+                type="text"
+                value={usernameInput}
+                onChange={(event) => setUsernameInput(event.target.value)}
+                autoComplete="username"
+              />
+            </label>
+            <label className={styles.field}>
+              <span>Password</span>
               <input
                 type="password"
-                value={tokenInput}
-                onChange={(event) => setTokenInput(event.target.value)}
+                value={passwordInput}
+                onChange={(event) => setPasswordInput(event.target.value)}
                 autoComplete="current-password"
               />
             </label>

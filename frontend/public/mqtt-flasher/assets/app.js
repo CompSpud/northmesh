@@ -312,6 +312,20 @@ const NORTHMESH_FIRMWARE_OVERRIDES = {
       full: "waveshare_rp2040_lora_repeater-v1.16.0-07a3ca9.uf2",
       update: "waveshare_rp2040_lora_repeater-v1.16.0-07a3ca9.bin"
     }
+  },
+  T_Beam_S3_Supreme_SX1262_repeater: {
+    id: "T_Beam_S3_Supreme_SX1262_repeater",
+    label: "T-Beam S3 Supreme SX1262 Repeater",
+    firmwareName: "meshcore",
+    firmwareVersion: "v1.16.0",
+    chipFamily: "ESP32-S3",
+    hardwareStatus: "Official MeshCore release",
+    manifestPath: "https://github.com/meshcore-dev/MeshCore/releases/tag/repeater-v1.16.0",
+    artifactBase: "https://github.com/meshcore-dev/MeshCore/releases/download/repeater-v1.16.0/",
+    artifacts: {
+      full: "T_Beam_S3_Supreme_SX1262_repeater-v1.16.0-07a3ca9-merged.bin",
+      update: "T_Beam_S3_Supreme_SX1262_repeater-v1.16.0-07a3ca9.bin"
+    }
   }
 };
 

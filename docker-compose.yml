@@ -30,6 +30,8 @@ services:
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://northmesh.co.uk,https://www.northmesh.co.uk}
       - JWT_SECRET=${JWT_SECRET}
       - PORTAL_ADMIN_TOKEN=${PORTAL_ADMIN_TOKEN:-${JWT_SECRET}}
+      - PORTAL_ADMIN_USERNAME=${PORTAL_ADMIN_USERNAME:-admin}
+      - PORTAL_ADMIN_PASSWORD=${PORTAL_ADMIN_PASSWORD}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-meshcore}:${POSTGRES_PASSWORD}@timescaledb:5432/${POSTGRES_DB:-meshcore}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379}
     depends_on:

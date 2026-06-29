@@ -57,6 +57,13 @@ export default function Layout() {
           </div>
 
           <div className={styles.navRight}>
+            <Link
+              to="/portal"
+              className={`${styles.loginBtn} ${location.pathname === '/portal' ? styles.activeLogin : ''}`}
+            >
+              Login
+            </Link>
+
             <div className={styles.statusIndicator}>
               <span className={`${styles.statusDot} ${isConnected ? styles.connected : styles.disconnected}`} />
               <span className={styles.statusText}>

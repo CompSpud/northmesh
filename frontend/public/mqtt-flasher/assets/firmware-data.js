@@ -201,16 +201,16 @@ window.FIRMWARE_DATA = {
     },
     {
       "id": "T_Beam_S3_Supreme_SX1262_repeater",
-      "label": "T Beam S3 Supreme SX1262 repeater",
-      "firmwareName": "meshcore-mqtt",
-      "firmwareVersion": "v1.14.0",
+      "label": "T-Beam S3 Supreme SX1262 Repeater",
+      "firmwareName": "meshcore",
+      "firmwareVersion": "v1.16.0",
       "chipFamily": "ESP32-S3",
-      "hardwareStatus": "Compile validated",
-      "manifestPath": "/mqtt-flasher/firmware/T_Beam_S3_Supreme_SX1262_repeater/manifest.json",
-      "artifactBase": "/mqtt-flasher/firmware/T_Beam_S3_Supreme_SX1262_repeater/",
+      "hardwareStatus": "Official MeshCore release",
+      "manifestPath": "https://github.com/meshcore-dev/MeshCore/releases/tag/repeater-v1.16.0",
+      "artifactBase": "https://github.com/meshcore-dev/MeshCore/releases/download/repeater-v1.16.0/",
       "artifacts": {
-        "full": "meshcore-mqtt-v1.14.0-T_Beam_S3_Supreme_SX1262_repeater-full-7860.bin",
-        "update": "meshcore-mqtt-v1.14.0-T_Beam_S3_Supreme_SX1262_repeater-update-6271.bin"
+        "full": "T_Beam_S3_Supreme_SX1262_repeater-v1.16.0-07a3ca9-merged.bin",
+        "update": "T_Beam_S3_Supreme_SX1262_repeater-v1.16.0-07a3ca9.bin"
       }
     }
   ]

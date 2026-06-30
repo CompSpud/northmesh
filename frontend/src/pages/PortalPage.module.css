@@ -27,7 +27,8 @@
 
 .loginPanel,
 .nodeListPanel,
-.editorPanel {
+.editorPanel,
+.userPanel {
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -89,8 +90,13 @@
 }
 
 .nodeListPanel,
-.editorPanel {
+.editorPanel,
+.userPanel {
   padding: 20px;
+}
+
+.userPanel {
+  margin-top: 20px;
 }
 
 .panelHeader {
@@ -277,6 +283,65 @@
   color: var(--accent-green);
 }
 
+.userForm {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
+  padding: 16px;
+  background: var(--bg-void);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.userList {
+  display: grid;
+  gap: 10px;
+}
+
+.userRow {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.userMain {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.userMain strong,
+.userMain span {
+  overflow-wrap: anywhere;
+}
+
+.userMain span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.userRole {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid rgba(0, 212, 255, 0.22);
+  border-radius: 999px;
+  color: var(--accent-cyan);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .empty {
   color: var(--text-muted);
 }
@@ -306,6 +371,11 @@
   }
 
   .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .userForm,
+  .userRow {
     grid-template-columns: 1fr;
   }
 }

@@ -283,6 +283,17 @@
   color: var(--accent-green);
 }
 
+.createNodeForm {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(180px, 1.2fr) minmax(130px, 0.8fr) repeat(2, minmax(120px, 0.8fr)) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  background: var(--bg-void);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
 .userForm {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr)) auto auto;
@@ -374,6 +385,7 @@
     grid-template-columns: 1fr;
   }
 
+  .createNodeForm,
   .userForm,
   .userRow {
     grid-template-columns: 1fr;

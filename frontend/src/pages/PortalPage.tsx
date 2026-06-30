@@ -1,11 +1,12 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
-import { Activity, Copy, KeyRound, Lock, MapPin, Radio, Save, Wifi } from 'lucide-react'
+import { Activity, Copy, KeyRound, Lock, MapPin, Radio, Save, Shield, Trash2, UserPlus, Wifi } from 'lucide-react'
 import SEO from '../components/SEO'
 import { useNodeStore, Node } from '../hooks/useNodes'
 import { useWebSocket } from '../hooks/useWebSocket'
 import styles from './PortalPage.module.css'
 
 const PORTAL_TOKEN_KEY = 'northmesh-portal-token'
+const PORTAL_ROLE_KEY = 'northmesh-portal-role'
 
 const ROLE_LABELS: Record<number, string> = {
   1: 'ChatNode',
@@ -26,6 +27,14 @@ interface PortalNode {
   is_online?: boolean
   is_manual?: boolean
   is_mqtt_node?: boolean
+}
+
+interface PortalUser {
+  username: string
+  role: 'admin' | 'user'
+  node_id?: string | null
+  created_at?: string
+  updated_at?: string
 }
 
 function formatLastSeen(value?: string | number): string {
@@ -60,12 +69,18 @@ export default function PortalPage() {
   useWebSocket()
   const { nodes: liveNodes, stats } = useNodeStore()
   const [token, setToken] = useState(() => sessionStorage.getItem(PORTAL_TOKEN_KEY) || '')
+  const [userRole, setUserRole] = useState<'admin' | 'user' | ''>(() => {
+    const savedRole = sessionStorage.getItem(PORTAL_ROLE_KEY)
+    return savedRole === 'admin' || savedRole === 'user' ? savedRole : ''
+  })
   const [usernameInput, setUsernameInput] = useState('')
   const [passwordInput, setPasswordInput] = useState('')
   const [isAuthed, setIsAuthed] = useState(() => Boolean(sessionStorage.getItem(PORTAL_TOKEN_KEY)))
   const [portalNodes, setPortalNodes] = useState<PortalNode[]>([])
+  const [portalUsers, setPortalUsers] = useState<PortalUser[]>([])
   const [selectedNodeId, setSelectedNodeId] = useState('')
   const [form, setForm] = useState({ name: '', role: '2', lat: '', lon: '' })
+  const [userForm, setUserForm] = useState({ username: '', password: '', role: 'user', node_id: '' })
   const [mqttUsername, setMqttUsername] = useState('')
   const [mqttPassword, setMqttPassword] = useState('')
   const [status, setStatus] = useState('')
@@ -119,11 +134,28 @@ export default function PortalPage() {
     }
   }
 
+  async function loadPortalUsers() {
+    if (!token || userRole !== 'admin') return
+    try {
+      setError('')
+      const data = await portalFetch('/users')
+      setPortalUsers(data.data || [])
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Could not load portal users')
+    }
+  }
+
   useEffect(() => {
     if (isAuthed) {
       loadPortalNodes()
     }
   }, [isAuthed, token])
+
+  useEffect(() => {
+    if (isAuthed && userRole === 'admin') {
+      loadPortalUsers()
+    }
+  }, [isAuthed, token, userRole])
 
   async function handleLogin(event: FormEvent) {
     event.preventDefault()
@@ -140,7 +172,9 @@ export default function PortalPage() {
       if (!response.ok) throw new Error(data.error || 'Login failed')
 
       sessionStorage.setItem(PORTAL_TOKEN_KEY, data.token)
+      sessionStorage.setItem(PORTAL_ROLE_KEY, data.role)
       setToken(data.token)
+      setUserRole(data.role === 'admin' ? 'admin' : 'user')
       setIsAuthed(true)
       setUsernameInput('')
       setPasswordInput('')
@@ -152,9 +186,12 @@ export default function PortalPage() {
 
   function logout() {
     sessionStorage.removeItem(PORTAL_TOKEN_KEY)
+    sessionStorage.removeItem(PORTAL_ROLE_KEY)
     setToken('')
+    setUserRole('')
     setIsAuthed(false)
     setPortalNodes([])
+    setPortalUsers([])
     setStatus('')
   }
 
@@ -190,6 +227,64 @@ export default function PortalPage() {
       setStatus('MQTT password generated')
     } catch (passwordError) {
       setError(passwordError instanceof Error ? passwordError.message : 'Could not generate password')
+    }
+  }
+
+  async function generatePortalPassword() {
+    try {
+      setError('')
+      const data = await portalFetch('/mqtt-password', { method: 'POST', body: '{}' })
+      setUserForm({ ...userForm, password: data.password || '' })
+      setStatus('Password generated')
+    } catch (passwordError) {
+      setError(passwordError instanceof Error ? passwordError.message : 'Could not generate password')
+    }
+  }
+
+  async function savePortalUser(event: FormEvent) {
+    event.preventDefault()
+    try {
+      setError('')
+      setStatus('Saving user')
+      await portalFetch('/users', {
+        method: 'POST',
+        body: JSON.stringify(userForm),
+      })
+      setStatus('User saved')
+      setUserForm({ username: '', password: '', role: 'user', node_id: '' })
+      await loadPortalUsers()
+    } catch (saveError) {
+      setStatus('')
+      setError(saveError instanceof Error ? saveError.message : 'Could not save user')
+    }
+  }
+
+  async function resetPortalUserPassword(username: string) {
+    try {
+      setError('')
+      const data = await portalFetch('/mqtt-password', { method: 'POST', body: '{}' })
+      const password = data.password || ''
+      await portalFetch(`/users/${encodeURIComponent(username)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ password }),
+      })
+      await navigator.clipboard?.writeText(password)
+      setStatus(`Password reset for ${username} and copied`)
+      await loadPortalUsers()
+    } catch (resetError) {
+      setError(resetError instanceof Error ? resetError.message : 'Could not reset password')
+    }
+  }
+
+  async function deletePortalUser(username: string) {
+    if (!window.confirm(`Delete ${username}?`)) return
+    try {
+      setError('')
+      await portalFetch(`/users/${encodeURIComponent(username)}`, { method: 'DELETE' })
+      setStatus(`Deleted ${username}`)
+      await loadPortalUsers()
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Could not delete user')
     }
   }
 
@@ -373,6 +468,94 @@ export default function PortalPage() {
               )}
             </section>
           </div>
+
+          {userRole === 'admin' && (
+            <section className={styles.userPanel}>
+              <div className={styles.panelHeader}>
+                <h2>Portal Users</h2>
+                <button className={styles.secondaryButton} type="button" onClick={loadPortalUsers}>
+                  Refresh
+                </button>
+              </div>
+
+              <form className={styles.userForm} onSubmit={savePortalUser}>
+                <label className={styles.field}>
+                  <span>Username</span>
+                  <input
+                    value={userForm.username}
+                    onChange={(event) => setUserForm({ ...userForm, username: event.target.value })}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Password</span>
+                  <input
+                    value={userForm.password}
+                    onChange={(event) => setUserForm({ ...userForm, password: event.target.value })}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Role</span>
+                  <select
+                    value={userForm.role}
+                    onChange={(event) => setUserForm({ ...userForm, role: event.target.value, node_id: event.target.value === 'admin' ? '' : userForm.node_id })}
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </label>
+                <label className={styles.field}>
+                  <span>Assigned node</span>
+                  <select
+                    value={userForm.node_id}
+                    disabled={userForm.role === 'admin'}
+                    onChange={(event) => setUserForm({ ...userForm, node_id: event.target.value })}
+                  >
+                    <option value="">Choose node</option>
+                    {nodes.map((node) => (
+                      <option key={node.node_id} value={node.node_id}>
+                        {node.name || node.node_id.slice(0, 8)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button className={styles.secondaryButton} type="button" onClick={generatePortalPassword}>
+                  <KeyRound size={16} />
+                  Generate
+                </button>
+                <button className={styles.primaryButton} type="submit">
+                  <UserPlus size={16} />
+                  Save user
+                </button>
+              </form>
+
+              <div className={styles.userList}>
+                {portalUsers.map((user) => {
+                  const assignedNode = nodes.find((node) => node.node_id === user.node_id)
+
+                  return (
+                    <div className={styles.userRow} key={user.username}>
+                      <div className={styles.userMain}>
+                        <strong>{user.username}</strong>
+                        <span>
+                          {user.role === 'admin' ? 'Admin' : assignedNode?.name || user.node_id || 'No node assigned'}
+                        </span>
+                      </div>
+                      <span className={styles.userRole}>
+                        <Shield size={14} />
+                        {user.role}
+                      </span>
+                      <button className={styles.secondaryButton} type="button" onClick={() => resetPortalUserPassword(user.username)}>
+                        Reset password
+                      </button>
+                      <button className={styles.iconButton} type="button" aria-label={`Delete ${user.username}`} onClick={() => deletePortalUser(user.username)}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )}
         </>
       )}
 

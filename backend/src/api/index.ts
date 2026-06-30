@@ -1,6 +1,6 @@
 import { Response, Router } from 'express'
 import { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from 'crypto'
-import { loadNodes, updateManagedNode } from '../db/client.js'
+import { createManagedNode, loadNodes, updateManagedNode } from '../db/client.js'
 import { db } from '../db/client.js'
 
 export const apiRouter = Router()
@@ -267,6 +267,53 @@ apiRouter.get('/portal/nodes', async (_req, res) => {
       is_mqtt_node: node.is_mqtt_node,
     })),
   })
+})
+
+apiRouter.post('/portal/nodes', async (req, res) => {
+  if (!requirePortalAdmin(res)) return
+
+  const nodeId = String(req.body?.node_id || '').trim()
+  const name = String(req.body?.name || '').trim()
+  const role = Number.parseInt(String(req.body?.role ?? '2'), 10)
+  const lat = req.body?.lat === undefined || req.body?.lat === null || req.body?.lat === ''
+    ? null
+    : Number.parseFloat(String(req.body.lat))
+  const lon = req.body?.lon === undefined || req.body?.lon === null || req.body?.lon === ''
+    ? null
+    : Number.parseFloat(String(req.body.lon))
+
+  if (!/^[a-zA-Z0-9._:-]{2,96}$/.test(nodeId)) {
+    res.status(400).json({ error: 'Node ID must be 2-96 letters, numbers, dots, dashes, underscores, or colons' })
+    return
+  }
+
+  if (!name) {
+    res.status(400).json({ error: 'Node name is required' })
+    return
+  }
+
+  if (!Number.isInteger(role) || role < 1 || role > 4) {
+    res.status(400).json({ error: 'Role must be between 1 and 4' })
+    return
+  }
+
+  if (lat !== null && (!Number.isFinite(lat) || lat < -90 || lat > 90)) {
+    res.status(400).json({ error: 'Latitude must be between -90 and 90' })
+    return
+  }
+
+  if (lon !== null && (!Number.isFinite(lon) || lon < -180 || lon > 180)) {
+    res.status(400).json({ error: 'Longitude must be between -180 and 180' })
+    return
+  }
+
+  if ((lat === null) !== (lon === null)) {
+    res.status(400).json({ error: 'Latitude and longitude must be set together' })
+    return
+  }
+
+  const node = await createManagedNode({ node_id: nodeId, name, role, lat, lon })
+  res.json({ ok: true, node })
 })
 
 apiRouter.get('/portal/users', async (_req, res) => {

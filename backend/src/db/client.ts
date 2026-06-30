@@ -170,3 +170,41 @@ export async function updateManagedNode(nodeId: string, updates: {
     ]
   )
 }
+
+export async function createManagedNode(node: {
+  node_id: string
+  name: string
+  role: number
+  lat?: number | null
+  lon?: number | null
+}): Promise<{
+  node_id: string
+  name: string
+  lat?: number | null
+  lon?: number | null
+  role?: number | null
+  last_seen?: string | Date
+  is_online?: boolean
+  is_manual?: boolean
+  is_mqtt_node?: boolean
+}> {
+  await ensureNodesTable()
+
+  const hasLocation = node.lat !== undefined && node.lat !== null && node.lon !== undefined && node.lon !== null
+  const result = await db.query(
+    `INSERT INTO nodes (node_id, name, role, lat, lon, last_seen, is_online, is_manual, location_locked, is_mqtt_node, created_at)
+     VALUES ($1, $2, $3, $4, $5, NOW(), FALSE, TRUE, $6, FALSE, NOW())
+     ON CONFLICT (node_id) DO UPDATE SET
+       name = EXCLUDED.name,
+       role = EXCLUDED.role,
+       lat = COALESCE(EXCLUDED.lat, nodes.lat),
+       lon = COALESCE(EXCLUDED.lon, nodes.lon),
+       is_manual = CASE WHEN nodes.is_mqtt_node THEN nodes.is_manual ELSE TRUE END,
+       location_locked = nodes.location_locked OR EXCLUDED.location_locked,
+       is_mqtt_node = nodes.is_mqtt_node
+     RETURNING node_id, name, lat, lon, role, last_seen, is_online, is_manual, is_mqtt_node`,
+    [node.node_id, node.name, node.role, node.lat ?? null, node.lon ?? null, hasLocation]
+  )
+
+  return result.rows[0]
+}

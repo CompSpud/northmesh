@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
-import { Activity, Copy, KeyRound, Lock, MapPin, Radio, Save, Shield, Trash2, UserPlus, Wifi } from 'lucide-react'
+import { Activity, Copy, KeyRound, Lock, MapPin, PlusCircle, Radio, Save, Shield, Trash2, UserPlus, Wifi } from 'lucide-react'
 import SEO from '../components/SEO'
 import { useNodeStore, Node } from '../hooks/useNodes'
 import { useWebSocket } from '../hooks/useWebSocket'
@@ -80,6 +80,7 @@ export default function PortalPage() {
   const [portalUsers, setPortalUsers] = useState<PortalUser[]>([])
   const [selectedNodeId, setSelectedNodeId] = useState('')
   const [form, setForm] = useState({ name: '', role: '2', lat: '', lon: '' })
+  const [newNodeForm, setNewNodeForm] = useState({ node_id: '', name: '', role: '2', lat: '', lon: '' })
   const [userForm, setUserForm] = useState({ username: '', password: '', role: 'user', node_id: '' })
   const [mqttUsername, setMqttUsername] = useState('')
   const [mqttPassword, setMqttPassword] = useState('')
@@ -216,6 +217,28 @@ export default function PortalPage() {
     } catch (saveError) {
       setStatus('')
       setError(saveError instanceof Error ? saveError.message : 'Could not save node')
+    }
+  }
+
+  async function createNode(event: FormEvent) {
+    event.preventDefault()
+    try {
+      setError('')
+      setStatus('Creating node')
+      const data = await portalFetch('/nodes', {
+        method: 'POST',
+        body: JSON.stringify(newNodeForm),
+      })
+      const node = data.node as PortalNode | undefined
+      const nodeId = node?.node_id || newNodeForm.node_id
+      setStatus('Node created')
+      setNewNodeForm({ node_id: '', name: '', role: '2', lat: '', lon: '' })
+      setSelectedNodeId(nodeId)
+      setUserForm({ ...userForm, role: 'user', node_id: nodeId })
+      await loadPortalNodes()
+    } catch (createError) {
+      setStatus('')
+      setError(createError instanceof Error ? createError.message : 'Could not create node')
     }
   }
 
@@ -384,7 +407,7 @@ export default function PortalPage() {
                     <span className={`${styles.onlineDot} ${node.is_online ? styles.online : ''}`} />
                     <span>
                       <strong>{node.name || node.node_id.slice(0, 8)}</strong>
-                      <small>{ROLE_LABELS[node.role ?? 0] || 'Unknown'} · {formatLastSeen(node.last_seen)}</small>
+                      <small>{ROLE_LABELS[node.role ?? 0] || 'Unknown'} - {formatLastSeen(node.last_seen)}</small>
                     </span>
                   </button>
                 ))}
@@ -470,7 +493,60 @@ export default function PortalPage() {
           </div>
 
           {userRole === 'admin' && (
-            <section className={styles.userPanel}>
+            <>
+              <section className={styles.userPanel}>
+                <div className={styles.panelHeader}>
+                  <h2>Create Node</h2>
+                </div>
+
+                <form className={styles.createNodeForm} onSubmit={createNode}>
+                  <label className={styles.field}>
+                    <span>Node ID</span>
+                    <input
+                      value={newNodeForm.node_id}
+                      onChange={(event) => setNewNodeForm({ ...newNodeForm, node_id: event.target.value })}
+                    />
+                  </label>
+                  <label className={styles.field}>
+                    <span>Name</span>
+                    <input
+                      value={newNodeForm.name}
+                      onChange={(event) => setNewNodeForm({ ...newNodeForm, name: event.target.value })}
+                    />
+                  </label>
+                  <label className={styles.field}>
+                    <span>Role</span>
+                    <select
+                      value={newNodeForm.role}
+                      onChange={(event) => setNewNodeForm({ ...newNodeForm, role: event.target.value })}
+                    >
+                      {Object.entries(ROLE_LABELS).map(([role, label]) => (
+                        <option key={role} value={role}>{label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className={styles.field}>
+                    <span>Latitude</span>
+                    <input
+                      value={newNodeForm.lat}
+                      onChange={(event) => setNewNodeForm({ ...newNodeForm, lat: event.target.value })}
+                    />
+                  </label>
+                  <label className={styles.field}>
+                    <span>Longitude</span>
+                    <input
+                      value={newNodeForm.lon}
+                      onChange={(event) => setNewNodeForm({ ...newNodeForm, lon: event.target.value })}
+                    />
+                  </label>
+                  <button className={styles.primaryButton} type="submit">
+                    <PlusCircle size={16} />
+                    Create node
+                  </button>
+                </form>
+              </section>
+
+              <section className={styles.userPanel}>
               <div className={styles.panelHeader}>
                 <h2>Portal Users</h2>
                 <button className={styles.secondaryButton} type="button" onClick={loadPortalUsers}>
@@ -554,7 +630,8 @@ export default function PortalPage() {
                   )
                 })}
               </div>
-            </section>
+              </section>
+            </>
           )}
         </>
       )}

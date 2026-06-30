@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Response, Router } from 'express'
 import { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from 'crypto'
 import { loadNodes, updateManagedNode } from '../db/client.js'
 import { db } from '../db/client.js'
@@ -12,6 +12,8 @@ interface PortalUser {
   password_hash: string
   role: 'admin' | 'user'
   node_id?: string | null
+  created_at?: string | Date
+  updated_at?: string | Date
 }
 
 interface PortalSession {
@@ -102,6 +104,33 @@ async function findPortalUser(username: string): Promise<PortalUser | null> {
     return null
   }
   return user
+}
+
+function portalSession(res: Response): PortalSession {
+  return res.locals.portalUser as PortalSession
+}
+
+function requirePortalAdmin(res: Response): PortalSession | null {
+  const session = portalSession(res)
+  if (session.role !== 'admin') {
+    res.status(403).json({ error: 'Admin access required' })
+    return null
+  }
+  return session
+}
+
+function publicPortalUser(user: PortalUser) {
+  return {
+    username: user.username,
+    role: user.role,
+    node_id: user.node_id ?? null,
+    created_at: user.created_at,
+    updated_at: user.updated_at,
+  }
+}
+
+function sanitizePortalRole(value: unknown): 'admin' | 'user' {
+  return value === 'admin' ? 'admin' : 'user'
 }
 
 function matchesSecret(value: string, secret: string): boolean {
@@ -217,7 +246,7 @@ apiRouter.post('/portal/login', async (req, res) => {
 })
 
 apiRouter.get('/portal/nodes', async (_req, res) => {
-  const session = res.locals.portalUser as PortalSession
+  const session = portalSession(res)
   const nodes = await loadNodes()
   const visibleNodes = session.role === 'admin'
     ? nodes
@@ -238,6 +267,139 @@ apiRouter.get('/portal/nodes', async (_req, res) => {
       is_mqtt_node: node.is_mqtt_node,
     })),
   })
+})
+
+apiRouter.get('/portal/users', async (_req, res) => {
+  if (!requirePortalAdmin(res)) return
+  await ensurePortalUsersTable()
+
+  const result = await db.query<PortalUser>(
+    `SELECT username, role, node_id, created_at, updated_at
+     FROM portal_users
+     ORDER BY role, username`
+  )
+
+  res.json({ data: result.rows.map(publicPortalUser) })
+})
+
+apiRouter.post('/portal/users', async (req, res) => {
+  if (!requirePortalAdmin(res)) return
+
+  const username = String(req.body?.username || '').trim()
+  const password = String(req.body?.password || '')
+  const role = sanitizePortalRole(req.body?.role)
+  const nodeId = role === 'user' ? String(req.body?.node_id || '').trim() : null
+
+  if (!/^[a-zA-Z0-9._-]{2,64}$/.test(username)) {
+    res.status(400).json({ error: 'Username must be 2-64 letters, numbers, dots, dashes, or underscores' })
+    return
+  }
+
+  if (password.length < 12) {
+    res.status(400).json({ error: 'Password must be at least 12 characters' })
+    return
+  }
+
+  if (role === 'user' && !nodeId) {
+    res.status(400).json({ error: 'Users must be assigned to a node' })
+    return
+  }
+
+  await ensurePortalUsersTable()
+  const result = await db.query<PortalUser>(
+    `INSERT INTO portal_users (username, password_hash, role, node_id, updated_at)
+     VALUES ($1, $2, $3, $4, NOW())
+     ON CONFLICT (username) DO UPDATE SET
+       password_hash = EXCLUDED.password_hash,
+       role = EXCLUDED.role,
+       node_id = EXCLUDED.node_id,
+       updated_at = NOW()
+     RETURNING username, role, node_id, created_at, updated_at`,
+    [username, hashPassword(password), role, nodeId || null]
+  )
+
+  res.json({ ok: true, user: publicPortalUser(result.rows[0]) })
+})
+
+apiRouter.patch('/portal/users/:username', async (req, res) => {
+  const session = requirePortalAdmin(res)
+  if (!session) return
+
+  const username = String(req.params.username || '').trim()
+  const password = typeof req.body?.password === 'string' ? req.body.password : undefined
+  const role = req.body?.role === undefined ? undefined : sanitizePortalRole(req.body.role)
+  const nodeId = role === 'admin'
+    ? null
+    : req.body?.node_id === undefined
+    ? undefined
+    : String(req.body.node_id || '').trim() || null
+
+  if (!username) {
+    res.status(400).json({ error: 'Username is required' })
+    return
+  }
+
+  if (password !== undefined && password.length < 12) {
+    res.status(400).json({ error: 'Password must be at least 12 characters' })
+    return
+  }
+
+  if (username === session.username && role === 'user') {
+    res.status(400).json({ error: 'You cannot remove your own admin access' })
+    return
+  }
+
+  await ensurePortalUsersTable()
+  const existing = await findPortalUser(username)
+  if (!existing) {
+    res.status(404).json({ error: 'User not found' })
+    return
+  }
+
+  const nextRole = role ?? existing.role
+  const nextNodeId = nextRole === 'admin'
+    ? null
+    : nodeId !== undefined
+    ? nodeId
+    : existing.node_id ?? null
+
+  if (nextRole === 'user' && !nextNodeId) {
+    res.status(400).json({ error: 'Users must be assigned to a node' })
+    return
+  }
+
+  const result = await db.query<PortalUser>(
+    `UPDATE portal_users
+     SET password_hash = COALESCE($2, password_hash),
+         role = $3,
+         node_id = $4,
+         updated_at = NOW()
+     WHERE username = $1
+     RETURNING username, role, node_id, created_at, updated_at`,
+    [username, password ? hashPassword(password) : null, nextRole, nextNodeId]
+  )
+
+  res.json({ ok: true, user: publicPortalUser(result.rows[0]) })
+})
+
+apiRouter.delete('/portal/users/:username', async (req, res) => {
+  const session = requirePortalAdmin(res)
+  if (!session) return
+
+  const username = String(req.params.username || '').trim()
+  if (!username) {
+    res.status(400).json({ error: 'Username is required' })
+    return
+  }
+
+  if (username === session.username) {
+    res.status(400).json({ error: 'You cannot delete the account you are using' })
+    return
+  }
+
+  await ensurePortalUsersTable()
+  const result = await db.query('DELETE FROM portal_users WHERE username = $1', [username])
+  res.json({ ok: true, deleted: result.rowCount ?? 0 })
 })
 
 apiRouter.patch('/portal/nodes/:nodeId', async (req, res) => {
